@@ -59,6 +59,7 @@ sonar {
         property "sonar.projectKey", "tunaozdemir99_sopra-fs26-group-29-server"
         property "sonar.organization", "tunaozdemir99"
         property "sonar.host.url", "https://sonarcloud.io"
+        property "sonar.projectName", "sopra-fs26-group-29-server"
     }
 }
 
