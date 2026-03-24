@@ -75,4 +75,29 @@ public class UserService {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format(baseErrorMessage, "name", "is"));
 		}
 	}
+
+	public User loginUser(User loginUser) {
+    User userByUsername = userRepository.findByUsername(loginUser.getUsername());
+
+    if (userByUsername == null || !userByUsername.getPassword().equals(loginUser.getPassword())) {
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
+    }
+
+    userByUsername.setToken(UUID.randomUUID().toString()); // token gets updated on each login
+    userByUsername.setStatus(UserStatus.ONLINE);
+    userRepository.save(userByUsername);
+    userRepository.flush();
+
+    return userByUsername;
+}
+
+	public void logoutUser(Long userId) {
+    User user = userRepository.findById(userId).orElseThrow(() ->
+        new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+    user.setToken(null); // invalidate session token
+    user.setStatus(UserStatus.OFFLINE);
+    userRepository.save(user);
+    userRepository.flush();
+}
 }
