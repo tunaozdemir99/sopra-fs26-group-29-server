@@ -74,4 +74,86 @@ public class UserServiceIntegrationTest {
 		// check that an error is thrown
 		assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser2));
 	}
+
+	@Test
+	public void loginUser_validCredentials_success() {
+		// given
+		User testUser = new User();
+		testUser.setName("testName");
+		testUser.setUsername("testUsername");
+		testUser.setPassword("testPassword");
+		User createdUser = userService.createUser(testUser);
+		String tokenAfterRegistration = createdUser.getToken();
+
+		// when
+		User loginUser = new User();
+		loginUser.setUsername("testUsername");
+		loginUser.setPassword("testPassword");
+		User loggedInUser = userService.loginUser(loginUser);
+
+		// then
+		assertEquals(UserStatus.ONLINE, loggedInUser.getStatus());
+		assertNotNull(loggedInUser.getToken());
+		assertNotEquals(tokenAfterRegistration, loggedInUser.getToken()); // token rotated
+	}
+
+	@Test
+	public void loginUser_invalidPassword_throwsException() {
+		// given
+		User testUser = new User();
+		testUser.setName("testName");
+		testUser.setUsername("testUsername");
+		testUser.setPassword("testPassword");
+		userService.createUser(testUser);
+
+		// when / then
+		User loginUser = new User();
+		loginUser.setUsername("testUsername");
+		loginUser.setPassword("wrongPassword");
+
+		assertThrows(ResponseStatusException.class, () -> userService.loginUser(loginUser));
+	}
+
+	@Test
+	public void loginUser_nonExistentUser_throwsException() {
+		// given - no user created
+
+		// when / then
+		User loginUser = new User();
+		loginUser.setUsername("ghost");
+		loginUser.setPassword("somePassword");
+
+		assertThrows(ResponseStatusException.class, () -> userService.loginUser(loginUser));
+		}
+
+	@Test
+	public void logoutUser_validUser_success() {
+		// given
+		User testUser = new User();
+		testUser.setName("testName");
+		testUser.setUsername("testUsername");
+		testUser.setPassword("testPassword");
+		userService.createUser(testUser);
+
+		User loginUser = new User();
+		loginUser.setUsername("testUsername");
+		loginUser.setPassword("testPassword");
+		User loggedInUser = userService.loginUser(loginUser);
+
+		// when
+		userService.logoutUser(loggedInUser.getId());
+
+		// then
+		User afterLogout = userService.getUserById(loggedInUser.getId());
+		assertEquals(UserStatus.OFFLINE, afterLogout.getStatus());
+		assertNull(afterLogout.getToken());
+	}
+
+	@Test
+	public void logoutUser_nonExistentUser_throwsException() {
+    	// given - no user exists with this id
+
+    	// when / then
+   		assertThrows(ResponseStatusException.class, () -> userService.logoutUser(999L));
+}
 }
