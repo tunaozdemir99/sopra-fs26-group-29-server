@@ -27,6 +27,9 @@ public class Trip implements Serializable {
     @Column(nullable = false)
     private String title;
 
+    @Column
+    private String location;
+
     @Column(nullable = false)
     private LocalDate startDate;
 
@@ -59,6 +62,14 @@ public class Trip implements Serializable {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
     }
 
     public LocalDate getStartDate() {

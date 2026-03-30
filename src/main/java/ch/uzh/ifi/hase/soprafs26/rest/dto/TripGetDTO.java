@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 public class TripGetDTO {
     private Long tripId;
     private String title;
+    private String location;
     private LocalDate startDate;
     private LocalDate endDate;
     private LocalDateTime createdAt;
@@ -35,6 +36,14 @@ public class TripGetDTO {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
     }
 
     public LocalDate getStartDate() {
