@@ -1,7 +1,6 @@
 package ch.uzh.ifi.hase.soprafs26.rest.dto;
-
 import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
-import java.util.Date;
+
 
 public class UserLoginDTO {
 
