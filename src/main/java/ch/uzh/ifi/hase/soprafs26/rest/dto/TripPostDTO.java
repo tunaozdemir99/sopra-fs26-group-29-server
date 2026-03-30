@@ -13,6 +13,7 @@ import java.time.LocalDate;
  */
 public class TripPostDTO {
     private String title;
+    private String location;
     private LocalDate startDate;
     private LocalDate endDate;
 
@@ -22,6 +23,14 @@ public class TripPostDTO {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
     }
 
     public LocalDate getStartDate() {
