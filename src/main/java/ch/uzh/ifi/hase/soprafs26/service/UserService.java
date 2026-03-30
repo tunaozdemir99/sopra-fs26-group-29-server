@@ -77,33 +77,32 @@ public class UserService {
 	}
 
 	public User loginUser(User loginUser) {
-    User userByUsername = userRepository.findByUsername(loginUser.getUsername());
+		User userByUsername = userRepository.findByUsername(loginUser.getUsername());
 
-    if (userByUsername == null || !userByUsername.getPassword().equals(loginUser.getPassword())) {
-        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
-    }
+		if (userByUsername == null || !userByUsername.getPassword().equals(loginUser.getPassword())) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid username or password");
+		}
 
-    userByUsername.setToken(UUID.randomUUID().toString()); // token gets updated on each login
-    userByUsername.setStatus(UserStatus.ONLINE);
-    userRepository.save(userByUsername);
-    userRepository.flush();
+		userByUsername.setToken(UUID.randomUUID().toString()); // token gets updated on each login
+		userByUsername.setStatus(UserStatus.ONLINE);
+		userRepository.save(userByUsername);
+		userRepository.flush();
 
-    return userByUsername;
-}
+		return userByUsername;
+	}
 
 	public void logoutUser(Long userId) {
-    User user = userRepository.findById(userId).orElseThrow(() ->
-        new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+		User user = userRepository.findById(userId).orElseThrow(() ->
+			new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-    user.setToken(null); // invalidate session token
-    user.setStatus(UserStatus.OFFLINE);
-    userRepository.save(user);
-    userRepository.flush();
-}
+		user.setToken(null); // invalidate session token
+		user.setStatus(UserStatus.OFFLINE);
+		userRepository.save(user);
+		userRepository.flush();
+	}
 
 	public User getUserById(Long userId) {
-			return userRepository.findById(userId).orElseThrow(() ->
-				new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-		}
-		
+		return userRepository.findById(userId).orElseThrow(() ->
+			new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+	}	
 }
