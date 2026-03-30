@@ -6,6 +6,7 @@ import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.entity.BucketItem;
 
 /**
  * DTOMapper
@@ -54,4 +55,19 @@ public interface DTOMapper {
     @Mapping(source = "inviteUrl", target = "inviteUrl")
     @Mapping(source = "admin.username", target = "adminUsername")
     TripGetDTO convertEntityToTripGetDTO(Trip trip);
+
+    // bucket mappings
+    @Mapping(source = "name", target = "name")
+    @Mapping(source = "description", target = "description")
+    @Mapping(source = "location", target = "location")
+    Trip convertBucketItemPostDTOtoEntity(BucketItemPostDTO bucketItemPostDTO);
+
+    @Mapping(source = "bucketItemId", target = "bucketItemId")
+    @Mapping(source = "name", target = "name")
+    @Mapping(source = "description", target = "description")
+    @Mapping(source = "location", target = "location")
+    @Mapping(source = "addedBy", target = "addedBy")
+    @Mapping(source = "voteScore", target = "voteScore")
+    @Mapping(source = "myVote", target = "myVote")
+    TripGetDTO convertEntityToBucketItemGetDTO(BucketItem bucketItem);
 }
