@@ -41,18 +41,18 @@ public class UserServiceIntegrationTest {
 		assertNull(userRepository.findByUsername("testUsername"));
 
 		User testUser = new User();
-		testUser.setName("testName");
 		testUser.setUsername("testUsername");
+        testUser.setPassword("testPassword");
 
-		// when
+        // when
 		User createdUser = userService.createUser(testUser);
 
 		// then
 		assertEquals(testUser.getId(), createdUser.getId());
-		assertEquals(testUser.getName(), createdUser.getName());
 		assertEquals(testUser.getUsername(), createdUser.getUsername());
+        assertEquals(testUser.getPassword(), createdUser.getPassword());
 		assertNotNull(createdUser.getToken());
-		assertEquals(UserStatus.OFFLINE, createdUser.getStatus());
+		assertEquals(UserStatus.ONLINE, createdUser.getStatus());
 	}
 
 	@Test
@@ -60,18 +60,16 @@ public class UserServiceIntegrationTest {
 		assertNull(userRepository.findByUsername("testUsername"));
 
 		User testUser = new User();
-		testUser.setName("testName");
 		testUser.setUsername("testUsername");
+        testUser.setPassword("testPassword");
 		userService.createUser(testUser);
 
 		// attempt to create second user with same username
 		User testUser2 = new User();
+        testUser2.setUsername("testUsername");
+        testUser2.setPassword("testPassword");
 
-		// change the name but forget about the username
-		testUser2.setName("testName2");
-		testUser2.setUsername("testUsername");
-
-		// check that an error is thrown
+        // check that an error is thrown
 		assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser2));
 	}
 
@@ -79,7 +77,6 @@ public class UserServiceIntegrationTest {
 	public void loginUser_validCredentials_success() {
 		// given
 		User testUser = new User();
-		testUser.setName("testName");
 		testUser.setUsername("testUsername");
 		testUser.setPassword("testPassword");
 		User createdUser = userService.createUser(testUser);
@@ -101,7 +98,6 @@ public class UserServiceIntegrationTest {
 	public void loginUser_invalidPassword_throwsException() {
 		// given
 		User testUser = new User();
-		testUser.setName("testName");
 		testUser.setUsername("testUsername");
 		testUser.setPassword("testPassword");
 		userService.createUser(testUser);
@@ -130,7 +126,6 @@ public class UserServiceIntegrationTest {
 	public void logoutUser_validUser_success() {
 		// given
 		User testUser = new User();
-		testUser.setName("testName");
 		testUser.setUsername("testUsername");
 		testUser.setPassword("testPassword");
 		userService.createUser(testUser);

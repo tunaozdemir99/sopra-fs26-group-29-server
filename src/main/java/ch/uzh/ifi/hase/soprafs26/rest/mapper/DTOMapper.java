@@ -1,12 +1,11 @@
 package ch.uzh.ifi.hase.soprafs26.rest.mapper;
 
+import ch.uzh.ifi.hase.soprafs26.entity.Trip;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.*;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
 import ch.uzh.ifi.hase.soprafs26.entity.User;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.UserLoginDTO;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 
 /**
  * DTOMapper
@@ -39,4 +38,18 @@ public interface DTOMapper {
 	@Mapping(source = "token", target = "token") 
 	UserLoginDTO convertEntityToUserLoginDTO(User user);
 
+    // trip mappings
+    @Mapping(source = "title", target = "title")
+    @Mapping(source = "startDate", target = "startDate")
+    @Mapping(source = "endDate", target = "endDate")
+    Trip convertTripPostDTOtoEntity(TripPostDTO tripPostDTO);
+
+    @Mapping(source = "tripId", target = "tripId")
+    @Mapping(source = "title", target = "title")
+    @Mapping(source = "startDate", target = "startDate")
+    @Mapping(source = "endDate", target = "endDate")
+    @Mapping(source = "createdAt", target = "createdAt")
+    @Mapping(source = "inviteUrl", target = "inviteUrl")
+    @Mapping(source = "admin.username", target = "adminUsername")
+    TripGetDTO convertEntityToTripGetDTO(Trip trip);
 }
