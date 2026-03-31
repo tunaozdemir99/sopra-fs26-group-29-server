@@ -60,14 +60,13 @@ public interface DTOMapper {
     @Mapping(source = "name", target = "name")
     @Mapping(source = "description", target = "description")
     @Mapping(source = "location", target = "location")
-    Trip convertBucketItemPostDTOtoEntity(BucketItemPostDTO bucketItemPostDTO);
+    BucketItem convertBucketItemPostDTOtoEntity(BucketItemPostDTO bucketItemPostDTO);
 
     @Mapping(source = "bucketItemId", target = "bucketItemId")
     @Mapping(source = "name", target = "name")
     @Mapping(source = "description", target = "description")
     @Mapping(source = "location", target = "location")
-    @Mapping(source = "addedBy", target = "addedBy")
+    @Mapping(source = "addedBy.username", target = "addedBy")
     @Mapping(source = "voteScore", target = "voteScore")
-    @Mapping(source = "myVote", target = "myVote")
-    TripGetDTO convertEntityToBucketItemGetDTO(BucketItem bucketItem);
+    BucketItemGetDTO convertEntityToBucketItemGetDTO(BucketItem bucketItem);
 }

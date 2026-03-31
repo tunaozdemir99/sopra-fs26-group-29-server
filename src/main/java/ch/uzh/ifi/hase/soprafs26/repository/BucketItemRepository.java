@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository("bucketItemRepository")
 public interface BucketItemRepository extends JpaRepository<BucketItem, Long> {
-    List<BucketItem> findByTrip_TripId(Long tripID);
+    List<BucketItem> findByBucketTrip_TripId(Long tripID);
 }
