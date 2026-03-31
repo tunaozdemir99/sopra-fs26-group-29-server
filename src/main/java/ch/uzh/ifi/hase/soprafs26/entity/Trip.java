@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * ClassName: Trip
@@ -46,6 +48,14 @@ public class Trip implements Serializable {
     @ManyToOne
     @JoinColumn(name = "admin_id", nullable = false)
     private User admin;
+
+    @ManyToMany
+    @JoinTable(
+        name = "trip_members",
+        joinColumns = @JoinColumn(name = "trip_id"),
+        inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private Set<User> members = new HashSet<>();
 
     // getters & setters
     public Long getTripId() {
@@ -110,5 +120,17 @@ public class Trip implements Serializable {
 
     public void setAdmin(User admin) {
         this.admin = admin;
+    }
+
+    public Set<User> getMembers() {
+        return members;
+    }
+
+    public void setMembers(Set<User> members) {
+        this.members = members;
+    }
+
+    public void addMember(User user) {
+        this.members.add(user);
     }
 }

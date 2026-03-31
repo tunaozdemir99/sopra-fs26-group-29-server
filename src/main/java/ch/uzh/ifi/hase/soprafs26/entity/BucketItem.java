@@ -93,4 +93,12 @@ public class BucketItem implements Serializable {
     public void setBucketTrip(Trip bucketTrip) {
         this.bucketTrip = bucketTrip;
     }
+
+    public int getVoteScore() {
+        return voteScore;
+    }
+
+    public void setVoteScore(int voteScore) {
+        this.voteScore = voteScore;
+    }
 }

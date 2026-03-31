@@ -64,6 +64,7 @@ public class TripService {
         newTrip.setAdmin(creator);
         newTrip.setCreatedAt(LocalDateTime.now());
         newTrip.setInviteUrl(UUID.randomUUID().toString());
+        newTrip.addMember(creator);     // adding the admin to the set of trip members
 
         newTrip = tripRepository.save(newTrip);
         tripRepository.flush();
