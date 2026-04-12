@@ -8,6 +8,7 @@ import org.mapstruct.factory.Mappers;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.entity.BucketItem;
 import ch.uzh.ifi.hase.soprafs26.entity.Task;
+import ch.uzh.ifi.hase.soprafs26.entity.Activity;
 
 /**
  * DTOMapper
@@ -76,4 +77,6 @@ public interface DTOMapper {
     @Mapping(source = "status", target = "status")
     @Mapping(source = "assignee", target = "assignee")
     TaskGetDTO convertEntityToTaskGetDTO(Task task);
+
+    ActivityGetDTO convertEntityToActivityGetDTO(Activity activity);
 }
