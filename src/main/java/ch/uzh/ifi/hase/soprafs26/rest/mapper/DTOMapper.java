@@ -7,6 +7,7 @@ import org.mapstruct.factory.Mappers;
 
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.entity.BucketItem;
+import ch.uzh.ifi.hase.soprafs26.entity.Task;
 
 /**
  * DTOMapper
@@ -69,4 +70,10 @@ public interface DTOMapper {
     @Mapping(source = "addedBy.username", target = "addedBy")
     @Mapping(source = "voteScore", target = "voteScore")
     BucketItemGetDTO convertEntityToBucketItemGetDTO(BucketItem bucketItem);
+
+    @Mapping(source = "taskId", target = "taskId")
+    @Mapping(source = "description", target = "description")
+    @Mapping(source = "status", target = "status")
+    @Mapping(source = "assignee", target = "assignee")
+    TaskGetDTO convertEntityToTaskGetDTO(Task task);
 }
