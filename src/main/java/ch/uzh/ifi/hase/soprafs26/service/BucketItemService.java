@@ -6,6 +6,8 @@ import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.BucketItemRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.TripRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.BucketItemPatchDTO;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,5 +60,50 @@ public class BucketItemService {
         newItem.setAddedBy(user);
         newItem.setBucketTrip(trip);
         return bucketItemRepository.save(newItem);
+    }
+
+    public BucketItem updateBucketItem(Long tripId, Long itemId, BucketItemPatchDTO patch, String token) {
+        User user = userRepository.findByToken(token);
+        if (user == null)
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or missing token");
+
+        BucketItem item = bucketItemRepository.findById(itemId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Bucket item not found"));
+
+        if (!item.getBucketTrip().getTripId().equals(tripId))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Item does not belong to this trip");
+
+        if (!item.getAddedBy().getId().equals(user.getId()))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the author can edit this item");
+
+        // Only update fields that were actually sent in the request
+        if (patch.getName() != null) {
+            if (patch.getName().isBlank())
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Name cannot be blank");
+            item.setName(patch.getName());
+        }
+        if (patch.getDescription() != null)
+            item.setDescription(patch.getDescription());
+        if (patch.getLocation() != null)
+            item.setLocation(patch.getLocation());
+
+        return bucketItemRepository.save(item);
+    }
+
+    public void deleteBucketItem(Long tripId, Long itemId, String token) {
+        User user = userRepository.findByToken(token);
+        if (user == null)
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or missing token");
+
+        BucketItem item = bucketItemRepository.findById(itemId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Bucket item not found"));
+
+        if (!item.getBucketTrip().getTripId().equals(tripId))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Item does not belong to this trip");
+
+        if (!item.getAddedBy().getId().equals(user.getId()))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the author can delete this item");
+
+        bucketItemRepository.delete(item);
     }
 }
