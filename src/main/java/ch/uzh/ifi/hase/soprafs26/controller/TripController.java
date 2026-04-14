@@ -45,9 +45,12 @@ public class TripController {
 
     @GetMapping("/trips/{tripId}")
     @ResponseStatus(HttpStatus.OK)
-    public TripGetDTO getTrip(@PathVariable Long tripId) {
+    public TripGetDTO getTrip(
+            @PathVariable Long tripId,
+            @RequestHeader("Authorization") String token) {
 
-        Trip trip = tripService.getTripById(tripId);
+        String rawToken = token.replace("Bearer ", "");
+        Trip trip = tripService.getTripById(tripId, rawToken);
 
         return DTOMapper.INSTANCE.convertEntityToTripGetDTO(trip);
     }
