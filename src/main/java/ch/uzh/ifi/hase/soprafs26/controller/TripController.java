@@ -8,6 +8,9 @@ import ch.uzh.ifi.hase.soprafs26.service.TripService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
  * ClassName: TripController
  * Package: ch.uzh.ifi.hase.soprafs26.controller
@@ -50,5 +53,18 @@ public class TripController {
         Trip trip = tripService.getTripById(tripId);
 
         return DTOMapper.INSTANCE.convertEntityToTripGetDTO(trip);
+    }
+
+    @GetMapping("/users/{userId}/trips")
+    @ResponseStatus(HttpStatus.OK)
+    public List<TripGetDTO> getTripsForUser(
+            @PathVariable Long userId,
+            @RequestHeader("Authorization") String token) {
+
+        String rawToken = token.replace("Bearer ", "");
+        List<Trip> trips = tripService.getTripsByUser(userId, rawToken);
+        return trips.stream()
+                .map(DTOMapper.INSTANCE::convertEntityToTripGetDTO)
+                .collect(Collectors.toList());
     }
 }
