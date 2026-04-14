@@ -10,6 +10,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
@@ -94,5 +95,39 @@ public class TripServiceTest {
 
         assertThrows(ResponseStatusException.class,
                 () -> tripService.createTrip(input, "valid-token"));
+    }
+
+    @Test
+    public void getTripById_validAdmin_success() {
+        testTrip.setAdmin(testUser);
+        Mockito.when(tripRepository.findById(1L)).thenReturn(java.util.Optional.of(testTrip));
+
+        Trip found = tripService.getTripById(1L, "valid-token");
+
+        assertEquals(testTrip.getTripId(), found.getTripId());
+    }
+
+    @Test
+    public void getTripById_invalidToken_throwsUnauthorized() {
+        Mockito.when(userRepository.findByToken("bad-token")).thenReturn(null);
+
+        assertThrows(ResponseStatusException.class,
+                () -> tripService.getTripById(1L, "bad-token"));
+    }
+
+    @Test
+    public void getTripById_notMember_throwsForbidden() {
+        User otherUser = new User();
+        otherUser.setId(2L);
+        otherUser.setUsername("bob");
+        otherUser.setToken("bob-token");
+
+        testTrip.setAdmin(otherUser); // trip belongs to bob, not testUser
+
+        Mockito.when(tripRepository.findById(1L)).thenReturn(java.util.Optional.of(testTrip));
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> tripService.getTripById(1L, "valid-token"));
+        assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
     }
 }

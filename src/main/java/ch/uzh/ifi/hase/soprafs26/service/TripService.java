@@ -73,9 +73,26 @@ public class TripService {
         return newTrip;
     }
 
-    public Trip getTripById(Long tripId) {
-        return tripRepository.findById(tripId)
+    public Trip getTripById(Long tripId, String token) {
+        // authenticate user
+        User user = userRepository.findByToken(token);
+        if (user == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED, "Invalid or missing token");
+        }
+
+        // find trip
+        Trip trip = tripRepository.findById(tripId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Trip not found"));
+
+        // authorization: only trip members can access
+        // TODO: extend to all trip members once Member entity is implemented (S5)
+        if (!trip.getAdmin().getId().equals(user.getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "User is not a member of this trip");
+        }
+
+        return trip;
     }
 }
