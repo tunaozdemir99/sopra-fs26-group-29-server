@@ -32,6 +32,12 @@ public class BucketItem implements Serializable {
     @Column
     private String location;
 
+    @Column
+    private Double latitude;
+
+    @Column
+    private Double longitude;
+
     // the user who created the item
     @ManyToOne
     @JoinColumn(name = "userId", nullable = false)
@@ -101,4 +107,10 @@ public class BucketItem implements Serializable {
     public void setVoteScore(int voteScore) {
         this.voteScore = voteScore;
     }
+
+    public Double getLatitude() { return latitude; }
+    public void setLatitude(Double latitude) { this.latitude = latitude; }
+
+    public Double getLongitude() { return longitude; }
+    public void setLongitude(Double longitude) { this.longitude = longitude; }
 }
