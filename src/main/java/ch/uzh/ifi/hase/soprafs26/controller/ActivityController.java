@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 public class ActivityController {
@@ -26,10 +25,7 @@ public class ActivityController {
             @PathVariable Long tripId,
             @RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
-        List<Activity> activities = activityService.getTimeline(tripId, token);
-        return activities.stream()
-            .map(DTOMapper.INSTANCE::convertEntityToActivityGetDTO)
-            .collect(Collectors.toList());
+        return activityService.getTimeline(tripId, token);
     }
 
     @PostMapping("/trips/{tripId}/timeline")
@@ -40,7 +36,8 @@ public class ActivityController {
             @RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
         Activity activity = activityService.scheduleFromBucket(
-            tripId, dto.getBucketItemId(), dto.getDate(), dto.getStartTime(), dto.getEndTime(), token);
+            tripId, dto.getBucketItemId(), dto.getDate(), dto.getStartTime(), dto.getEndTime(),
+            dto.getLocationName(), dto.getLatitude(), dto.getLongitude(), token);
         return DTOMapper.INSTANCE.convertEntityToActivityGetDTO(activity);
     }
 

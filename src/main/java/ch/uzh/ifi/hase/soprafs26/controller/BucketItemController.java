@@ -8,8 +8,6 @@ import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs26.service.BucketItemService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -27,12 +25,8 @@ public class BucketItemController {
             @PathVariable Long tripId,
             @RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
-        List<BucketItem> items = bucketItemService.getBucketItems(tripId, token);
-        List<BucketItemGetDTO> dtos = new ArrayList<>();
-        for (BucketItem item : items) {
-            dtos.add(DTOMapper.INSTANCE.convertEntityToBucketItemGetDTO(item));
-        }
-        return dtos;
+        List<BucketItemGetDTO> items = bucketItemService.getBucketItems(tripId, token);
+        return items;
     }
 
     @PostMapping("/trips/{tripId}/bucketItems")

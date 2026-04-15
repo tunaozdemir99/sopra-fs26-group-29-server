@@ -12,6 +12,11 @@ public class ActivityGetDTO {
     private LocalTime endTime;
     private boolean fromBucketItem;
 
+    private String locationName;
+    private Double latitude;
+    private Double longitude;
+    private Integer travelTimeToNextActivity;
+
     // TODO: location (name, lat, lng, placeId) — add when Google Maps is integrated
     // TODO: travelTimeToNextMinutes — add when timeline conflict logic is implemented
     // TODO: hasOverlapConflict — add when timeline conflict logic is implemented
@@ -64,4 +69,37 @@ public class ActivityGetDTO {
     public void setFromBucketItem(boolean fromBucketItem) { 
         this.fromBucketItem = fromBucketItem; 
     }
+
+    public String getLocationName() {
+        return locationName;
+    }
+
+    public void setLocationName(String locationName) {
+        this.locationName = locationName;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
+
+    public Integer getTravelTimeToNextActivity(){
+        return travelTimeToNextActivity;
+    }
+
+     public void setTravelTimeToNextActivity(Integer travelTimeToNextActivity) {
+      this.travelTimeToNextActivity = travelTimeToNextActivity;                                                                                                                                   
+  } 
+
 }

@@ -8,6 +8,8 @@ import ch.uzh.ifi.hase.soprafs26.repository.ActivityRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.BucketItemRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.TripRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.ActivityGetDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -26,19 +29,22 @@ public class ActivityService {
     private final TripRepository tripRepository;
     private final UserRepository userRepository;
     private final BucketItemRepository bucketItemRepository;
+    private final TravelTimeService travelTimeService;
 
     public ActivityService(ActivityRepository activityRepository,
                            TripRepository tripRepository,
                            UserRepository userRepository,
-                           BucketItemRepository bucketItemRepository) {
+                           BucketItemRepository bucketItemRepository,
+                           TravelTimeService travelTimeService) {
         this.activityRepository = activityRepository;
         this.tripRepository = tripRepository;
         this.userRepository = userRepository;
         this.bucketItemRepository = bucketItemRepository;
+        this.travelTimeService = travelTimeService;
     }
 
     // GET /trips/{tripId}/timeline
-    public List<Activity> getTimeline(Long tripId, String token) {
+    public List<ActivityGetDTO> getTimeline(Long tripId, String token) {
         User user = userRepository.findByToken(token);
         if (user == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or missing token");
@@ -48,16 +54,36 @@ public class ActivityService {
         if (!trip.getMembers().contains(user)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a member of this trip");
         }
+
         List<Activity> activities = activityRepository.findByActivityTrip_TripId(tripId);
         activities.sort(Comparator.comparing(Activity::getDate)
             .thenComparing(Activity::getStartTime));
-        return activities;
+
+        List<ActivityGetDTO> dtos = new ArrayList<>();
+        for (int i = 0; i < activities.size(); i++) {
+            ActivityGetDTO dto = DTOMapper.INSTANCE.convertEntityToActivityGetDTO(activities.get(i));
+
+            if (i < activities.size() - 1) {
+                Activity curr = activities.get(i);
+                Activity next = activities.get(i + 1);
+                if (curr.getLatitude() != null && next.getLatitude() != null) {
+                    Integer minutes = travelTimeService.computeTravelMinutes(
+                        curr.getLatitude(), curr.getLongitude(),
+                        next.getLatitude(), next.getLongitude());
+                    dto.setTravelTimeToNextActivity(minutes);
+                }
+            }
+
+            dtos.add(dto);
+        }
+        return dtos;
     }
 
     // POST /trips/{tripId}/timeline
     public Activity scheduleFromBucket(Long tripId, Long bucketItemId,
                                        LocalDate date, LocalTime startTime,
-                                       LocalTime endTime, String token) {
+                                       LocalTime endTime, String locationName,
+                                       Double latitude, Double longitude, String token) {
         User user = userRepository.findByToken(token);
         if (user == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or missing token");
@@ -82,6 +108,9 @@ public class ActivityService {
         activity.setFromBucketItem(true);
         activity.setActivityTrip(trip);
         activity.setBucketItem(bucketItem);
+        activity.setLocationName(locationName != null ? locationName : bucketItem.getLocation());
+        activity.setLatitude(latitude);
+        activity.setLongitude(longitude);
         return activityRepository.save(activity);
     }
 
