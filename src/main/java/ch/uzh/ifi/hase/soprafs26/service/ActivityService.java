@@ -9,6 +9,8 @@ import ch.uzh.ifi.hase.soprafs26.repository.BucketItemRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.TripRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.ActivityGetDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.ActivityPostDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.ActivityPutDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,8 @@ import java.util.List;
 @Service
 @Transactional
 public class ActivityService {
+
+    private static final String TRIP_NOT_FOUND = "Trip not found";
 
     private final ActivityRepository activityRepository;
     private final TripRepository tripRepository;
@@ -43,14 +47,13 @@ public class ActivityService {
         this.travelTimeService = travelTimeService;
     }
 
-    // GET /trips/{tripId}/timeline
     public List<ActivityGetDTO> getTimeline(Long tripId, String token) {
         User user = userRepository.findByToken(token);
         if (user == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or missing token");
         }
         Trip trip = tripRepository.findById(tripId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trip not found"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, TRIP_NOT_FOUND));
         if (!trip.getMembers().contains(user)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a member of this trip");
         }
@@ -79,54 +82,91 @@ public class ActivityService {
         return dtos;
     }
 
-    // POST /trips/{tripId}/timeline
-    public Activity scheduleFromBucket(Long tripId, Long bucketItemId,
-                                       LocalDate date, LocalTime startTime,
-                                       LocalTime endTime, String locationName,
-                                       Double latitude, Double longitude, String token) {
+    public Activity scheduleFromBucket(Long tripId, ActivityPostDTO activityPostDTO, String token) {
         User user = userRepository.findByToken(token);
         if (user == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or missing token");
         }
         Trip trip = tripRepository.findById(tripId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trip not found"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, TRIP_NOT_FOUND));
         if (!trip.getMembers().contains(user)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a member of this trip");
         }
-        BucketItem bucketItem = bucketItemRepository.findById(bucketItemId)
+        BucketItem bucketItem = bucketItemRepository.findById(activityPostDTO.getBucketItemId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Bucket item not found"));
 
         if (!bucketItem.getBucketTrip().getTripId().equals(tripId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bucket item does not belong to this trip");
         }
+        validateActivityTimes(activityPostDTO.getDate(), activityPostDTO.getStartTime(), activityPostDTO.getEndTime());
 
         Activity activity = new Activity();
         activity.setName(bucketItem.getName());
-        activity.setDate(date);
-        activity.setStartTime(startTime);
-        activity.setEndTime(endTime);
+        activity.setDate(activityPostDTO.getDate());
+        activity.setStartTime(activityPostDTO.getStartTime());
+        activity.setEndTime(activityPostDTO.getEndTime());
         activity.setFromBucketItem(true);
         activity.setActivityTrip(trip);
         activity.setBucketItem(bucketItem);
-        activity.setLocationName(locationName != null ? locationName : bucketItem.getLocation());
-        activity.setLatitude(latitude);
-        activity.setLongitude(longitude);
+        activity.setLocationName(activityPostDTO.getLocationName() != null ? activityPostDTO.getLocationName() : bucketItem.getLocation());
+        activity.setLatitude(activityPostDTO.getLatitude());
+        activity.setLongitude(activityPostDTO.getLongitude());
         return activityRepository.save(activity);
     }
 
-    // DELETE /trips/{tripId}/timeline/{activityId}
+    public Activity updateActivity(Long tripId, Long activityId, ActivityPutDTO activityPutDTO, String token) {
+        User user = userRepository.findByToken(token);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or missing token");
+        }
+
+        Trip trip = tripRepository.findById(tripId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, TRIP_NOT_FOUND));
+        if (!trip.getMembers().contains(user)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a member of this trip");
+        }
+
+        Activity activity = activityRepository.findById(activityId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Activity not found"));
+        if (!activity.getActivityTrip().getTripId().equals(tripId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Activity does not belong to this trip");
+        }
+
+        validateActivityTimes(activityPutDTO.getDate(), activityPutDTO.getStartTime(), activityPutDTO.getEndTime());
+
+        activity.setDate(activityPutDTO.getDate());
+        activity.setStartTime(activityPutDTO.getStartTime());
+        activity.setEndTime(activityPutDTO.getEndTime());
+        activity.setLocationName(activityPutDTO.getLocationName());
+        activity.setLatitude(activityPutDTO.getLatitude());
+        activity.setLongitude(activityPutDTO.getLongitude());
+        return activityRepository.save(activity);
+    }
+
     public void deleteActivity(Long tripId, Long activityId, String token) {
         User user = userRepository.findByToken(token);
         if (user == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or missing token");
         }
         Trip trip = tripRepository.findById(tripId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trip not found"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, TRIP_NOT_FOUND));
         if (!trip.getMembers().contains(user)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a member of this trip");
         }
         Activity activity = activityRepository.findById(activityId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Activity not found"));
+        if (!activity.getActivityTrip().getTripId().equals(tripId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Activity does not belong to this trip");
+        }
         activityRepository.delete(activity);
+    }
+
+    private void validateActivityTimes(LocalDate date, LocalTime startTime, LocalTime endTime) {
+        if (date == null || startTime == null || endTime == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Date, startTime and endTime are required");
+        }
+        if (!endTime.isAfter(startTime)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "endTime must be after startTime");
+        }
     }
 }
