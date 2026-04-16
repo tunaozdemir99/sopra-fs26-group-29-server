@@ -101,6 +101,16 @@ public class UserService {
 		userRepository.flush();
 	}
 
+	public void logoutUser(Long userId) {
+		User user = userRepository.findById(userId).orElseThrow(() ->
+			new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+		user.setToken(null);
+		user.setStatus(UserStatus.OFFLINE);
+		userRepository.save(user);
+		userRepository.flush();
+	}
+
 	public User getUserById(Long userId) {
 		return userRepository.findById(userId).orElseThrow(() ->
 			new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
