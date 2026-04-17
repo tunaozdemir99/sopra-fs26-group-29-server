@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -94,5 +95,16 @@ public class TripService {
         }
 
         return trip;
+    }
+
+    public List<Trip> getTripsByUser(Long userId, String token) {
+        User requester = userRepository.findByToken(token);
+        if (requester == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or missing token");
+        }
+        if (!requester.getId().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only view your own trips");
+        }
+        return tripRepository.findByMembers_Id(userId);
     }
 }

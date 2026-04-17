@@ -62,6 +62,8 @@ public interface DTOMapper {
     @Mapping(source = "name", target = "name")
     @Mapping(source = "description", target = "description")
     @Mapping(source = "location", target = "location")
+    @Mapping(source = "latitude", target = "latitude")
+    @Mapping(source = "longitude", target = "longitude")
     BucketItem convertBucketItemPostDTOtoEntity(BucketItemPostDTO bucketItemPostDTO);
 
     @Mapping(source = "bucketItemId", target = "bucketItemId")
@@ -70,6 +72,8 @@ public interface DTOMapper {
     @Mapping(source = "location", target = "location")
     @Mapping(source = "addedBy.username", target = "addedBy")
     @Mapping(source = "voteScore", target = "voteScore")
+    @Mapping(source = "latitude", target = "latitude")
+    @Mapping(source = "longitude", target = "longitude")
     BucketItemGetDTO convertEntityToBucketItemGetDTO(BucketItem bucketItem);
 
     @Mapping(source = "taskId", target = "taskId")

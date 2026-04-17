@@ -41,6 +41,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Inject API key into app.yaml
+        run: sed -i "s/PLACEHOLDER/${{ secrets.GOOGLE_MAPS_API_KEY }}/" app.yaml
+
       - name: Deploy to App Engine
         id: deploy
         uses: google-github-actions/deploy-appengine@v0.2.0

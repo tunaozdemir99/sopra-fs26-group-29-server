@@ -3,7 +3,6 @@ package ch.uzh.ifi.hase.soprafs26.entity;
 import jakarta.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Entity
@@ -31,6 +30,15 @@ public class Activity implements Serializable {
     @Column(nullable = false)
     private boolean fromBucketItem = false;
 
+    @Column
+    private String locationName;
+
+    @Column
+    private Double latitude;
+
+    @Column
+    private Double longitude;
+
     // which trip's timeline this activity belongs to
     @ManyToOne
     @JoinColumn(name = "trip_id", nullable = false)
@@ -41,12 +49,7 @@ public class Activity implements Serializable {
     @JoinColumn(name = "bucket_item_id", nullable = true)
     private BucketItem bucketItem;
 
-    // TODO: location (Google Maps — lat, lng, placeId, name) — to be implemented
-    // TODO: travelTimeToNextMinutes — computed field, to be implemented
-    // TODO: hasOverlapConflict — computed field, to be implemented
-    // TODO: hasTravelTimeConflict — computed field, to be implemented
-
-    public Long getActivityId() { 
+    public Long getActivityId() {
         return activityId; 
     }
 
@@ -108,5 +111,29 @@ public class Activity implements Serializable {
 
     public void setBucketItem(BucketItem bucketItem) { 
         this.bucketItem = bucketItem; 
+    }
+
+    public String getLocationName() {
+        return locationName;
+    }
+
+    public void setLocationName(String locationName) {
+        this.locationName = locationName;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
     }
 }

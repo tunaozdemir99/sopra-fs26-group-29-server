@@ -10,6 +10,8 @@ public class BucketItemGetDTO {
     private String addedBy;
     private int voteScore;
     private int myVote;
+    private Double latitude;
+    private Double longitude;
 
 	public Long getBucketItemId() {
 		return bucketItemId;
@@ -66,4 +68,10 @@ public class BucketItemGetDTO {
 	public void setMyVote(int myVote) {
 		this.myVote = myVote;
 	}
+
+    public Double getLatitude() { return latitude; }
+    public void setLatitude(Double latitude) { this.latitude = latitude; }
+
+    public Double getLongitude() { return longitude; }
+    public void setLongitude(Double longitude) { this.longitude = longitude; }
 }
