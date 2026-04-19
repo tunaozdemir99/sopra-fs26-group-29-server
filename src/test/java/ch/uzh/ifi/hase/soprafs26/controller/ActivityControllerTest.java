@@ -101,8 +101,7 @@ public class ActivityControllerTest {
         activity.setEndTime(LocalTime.of(11, 0));
         activity.setFromBucketItem(true);
 
-        given(activityService.scheduleFromBucket(
-                anyLong(), anyLong(), any(), any(), any(), any(), any(), any(), anyString()))
+        given(activityService.scheduleFromBucket(anyLong(), any(ActivityPostDTO.class), anyString()))
                 .willReturn(activity);
 
         ActivityPostDTO postDTO = new ActivityPostDTO();
@@ -124,8 +123,7 @@ public class ActivityControllerTest {
 
     @Test
     public void scheduleFromBucket_invalidToken_returns401() throws Exception {
-        given(activityService.scheduleFromBucket(
-                anyLong(), anyLong(), any(), any(), any(), any(), any(), any(), anyString()))
+        given(activityService.scheduleFromBucket(anyLong(), any(ActivityPostDTO.class), anyString()))
                 .willThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or missing token"));
 
         ActivityPostDTO postDTO = new ActivityPostDTO();
@@ -145,8 +143,7 @@ public class ActivityControllerTest {
 
     @Test
     public void scheduleFromBucket_bucketItemNotFound_returns404() throws Exception {
-        given(activityService.scheduleFromBucket(
-                anyLong(), anyLong(), any(), any(), any(), any(), any(), any(), anyString()))
+        given(activityService.scheduleFromBucket(anyLong(), any(ActivityPostDTO.class), anyString()))
                 .willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Bucket item not found"));
 
         ActivityPostDTO postDTO = new ActivityPostDTO();

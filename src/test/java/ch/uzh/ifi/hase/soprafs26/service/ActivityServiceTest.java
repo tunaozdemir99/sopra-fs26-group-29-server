@@ -9,6 +9,7 @@ import ch.uzh.ifi.hase.soprafs26.repository.BucketItemRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.TripRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.ActivityGetDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.ActivityPostDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -197,22 +198,28 @@ public class ActivityServiceTest {
     public void scheduleFromBucket_invalidToken_throwsUnauthorized() {
         Mockito.when(userRepository.findByToken("bad-token")).thenReturn(null);
 
+        ActivityPostDTO dto = new ActivityPostDTO();
+        dto.setBucketItemId(10L);
+        dto.setDate(LocalDate.of(2026, 8, 1));
+        dto.setStartTime(LocalTime.of(9, 0));
+        dto.setEndTime(LocalTime.of(11, 0));
+
         assertThrows(ResponseStatusException.class,
-                () -> activityService.scheduleFromBucket(
-                        1L, 10L, LocalDate.of(2026, 8, 1),
-                        LocalTime.of(9, 0), LocalTime.of(11, 0),
-                        null, null, null, "bad-token"));
+                () -> activityService.scheduleFromBucket(1L, dto, "bad-token"));
     }
 
     @Test
     public void scheduleFromBucket_tripNotFound_throwsNotFound() {
         Mockito.when(tripRepository.findById(99L)).thenReturn(Optional.empty());
 
+        ActivityPostDTO dto = new ActivityPostDTO();
+        dto.setBucketItemId(10L);
+        dto.setDate(LocalDate.of(2026, 8, 1));
+        dto.setStartTime(LocalTime.of(9, 0));
+        dto.setEndTime(LocalTime.of(11, 0));
+
         assertThrows(ResponseStatusException.class,
-                () -> activityService.scheduleFromBucket(
-                        99L, 10L, LocalDate.of(2026, 8, 1),
-                        LocalTime.of(9, 0), LocalTime.of(11, 0),
-                        null, null, null, "valid-token"));
+                () -> activityService.scheduleFromBucket(99L, dto, "valid-token"));
     }
 
     @Test
@@ -221,22 +228,28 @@ public class ActivityServiceTest {
         otherTrip.setTripId(2L);
         Mockito.when(tripRepository.findById(2L)).thenReturn(Optional.of(otherTrip));
 
+        ActivityPostDTO dto = new ActivityPostDTO();
+        dto.setBucketItemId(10L);
+        dto.setDate(LocalDate.of(2026, 8, 1));
+        dto.setStartTime(LocalTime.of(9, 0));
+        dto.setEndTime(LocalTime.of(11, 0));
+
         assertThrows(ResponseStatusException.class,
-                () -> activityService.scheduleFromBucket(
-                        2L, 10L, LocalDate.of(2026, 8, 1),
-                        LocalTime.of(9, 0), LocalTime.of(11, 0),
-                        null, null, null, "valid-token"));
+                () -> activityService.scheduleFromBucket(2L, dto, "valid-token"));
     }
 
     @Test
     public void scheduleFromBucket_bucketItemNotFound_throwsNotFound() {
         Mockito.when(bucketItemRepository.findById(99L)).thenReturn(Optional.empty());
 
+        ActivityPostDTO dto = new ActivityPostDTO();
+        dto.setBucketItemId(99L);
+        dto.setDate(LocalDate.of(2026, 8, 1));
+        dto.setStartTime(LocalTime.of(9, 0));
+        dto.setEndTime(LocalTime.of(11, 0));
+
         assertThrows(ResponseStatusException.class,
-                () -> activityService.scheduleFromBucket(
-                        1L, 99L, LocalDate.of(2026, 8, 1),
-                        LocalTime.of(9, 0), LocalTime.of(11, 0),
-                        null, null, null, "valid-token"));
+                () -> activityService.scheduleFromBucket(1L, dto, "valid-token"));
     }
 
     @Test
@@ -245,21 +258,27 @@ public class ActivityServiceTest {
         otherTrip.setTripId(2L);
         testBucketItem.setBucketTrip(otherTrip);
 
+        ActivityPostDTO dto = new ActivityPostDTO();
+        dto.setBucketItemId(10L);
+        dto.setDate(LocalDate.of(2026, 8, 1));
+        dto.setStartTime(LocalTime.of(9, 0));
+        dto.setEndTime(LocalTime.of(11, 0));
+
         assertThrows(ResponseStatusException.class,
-                () -> activityService.scheduleFromBucket(
-                        1L, 10L, LocalDate.of(2026, 8, 1),
-                        LocalTime.of(9, 0), LocalTime.of(11, 0),
-                        null, null, null, "valid-token"));
+                () -> activityService.scheduleFromBucket(1L, dto, "valid-token"));
     }
 
     @Test
     public void scheduleFromBucket_validInput_createsActivityWithBucketItemData() {
         Mockito.when(activityRepository.save(any())).thenReturn(testActivity);
 
-        Activity result = activityService.scheduleFromBucket(
-                1L, 10L, LocalDate.of(2026, 8, 1),
-                LocalTime.of(9, 0), LocalTime.of(11, 0),
-                null, null, null, "valid-token");
+        ActivityPostDTO dto = new ActivityPostDTO();
+        dto.setBucketItemId(10L);
+        dto.setDate(LocalDate.of(2026, 8, 1));
+        dto.setStartTime(LocalTime.of(9, 0));
+        dto.setEndTime(LocalTime.of(11, 0));
+
+        Activity result = activityService.scheduleFromBucket(1L, dto, "valid-token");
 
         Mockito.verify(activityRepository, Mockito.times(1)).save(any(Activity.class));
         assertEquals("Eiffel Tower", result.getName());
@@ -270,10 +289,14 @@ public class ActivityServiceTest {
         testBucketItem.setLocation("Old Location");
         Mockito.when(activityRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        Activity result = activityService.scheduleFromBucket(
-                1L, 10L, LocalDate.of(2026, 8, 1),
-                LocalTime.of(9, 0), LocalTime.of(11, 0),
-                "Custom Location", null, null, "valid-token");
+        ActivityPostDTO dto = new ActivityPostDTO();
+        dto.setBucketItemId(10L);
+        dto.setDate(LocalDate.of(2026, 8, 1));
+        dto.setStartTime(LocalTime.of(9, 0));
+        dto.setEndTime(LocalTime.of(11, 0));
+        dto.setLocationName("Custom Location");
+
+        Activity result = activityService.scheduleFromBucket(1L, dto, "valid-token");
 
         assertEquals("Custom Location", result.getLocationName());
     }
