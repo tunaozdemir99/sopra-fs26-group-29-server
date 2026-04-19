@@ -3,11 +3,10 @@ package ch.uzh.ifi.hase.soprafs26.service;
 import ch.uzh.ifi.hase.soprafs26.entity.BucketItem;
 import ch.uzh.ifi.hase.soprafs26.entity.Trip;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
-import ch.uzh.ifi.hase.soprafs26.entity.Vote;
+
 import ch.uzh.ifi.hase.soprafs26.repository.BucketItemRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.TripRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
-import ch.uzh.ifi.hase.soprafs26.repository.VoteRepository;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.BucketItemGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.BucketItemPatchDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
@@ -19,7 +18,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Transactional
@@ -28,16 +26,13 @@ public class BucketItemService {
     private final BucketItemRepository bucketItemRepository;
     private final TripRepository tripRepository;
     private final UserRepository userRepository;
-    private final VoteRepository voteRepository;
 
     public BucketItemService(BucketItemRepository bucketItemRepository,
                              TripRepository tripRepository,
-                             UserRepository userRepository,
-                             VoteRepository voteRepository) {
+                             UserRepository userRepository) {
         this.bucketItemRepository = bucketItemRepository;
         this.tripRepository = tripRepository;
         this.userRepository = userRepository;
-        this.voteRepository = voteRepository;
     }
 
     public List<BucketItemGetDTO> getBucketItems(Long tripId, String token) {
@@ -54,8 +49,6 @@ public class BucketItemService {
         List<BucketItemGetDTO> dtos = new ArrayList<>();
         for (BucketItem item : items) {
             BucketItemGetDTO dto = DTOMapper.INSTANCE.convertEntityToBucketItemGetDTO(item);
-            Optional<Vote> vote = voteRepository.findByUserAndBucketItem(user, item);
-            dto.setMyVote(vote.map(Vote::getValue).orElse(0));
             dtos.add(dto);
         }
         return dtos;
@@ -128,54 +121,5 @@ public class BucketItemService {
         bucketItemRepository.delete(item);
     }
 
-    public BucketItemGetDTO voteOnBucketItem(Long tripId, Long itemId, int value, String token) {
-    if (value != 1 && value != -1) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vote value must be 1 or -1");
-    }
-
-    User user = userRepository.findByToken(token);
-    if (user == null) {
-        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or missing token");
-    }
-
-    Trip trip = tripRepository.findById(tripId)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trip not found"));
-    if (!trip.getMembers().contains(user)) {
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a member of this trip");
-    }
-
-    BucketItem item = bucketItemRepository.findById(itemId)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Bucket item not found"));
-    if (!item.getBucketTrip().getTripId().equals(tripId)) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Item does not belong to this trip");
-    }
-
-    Optional<Vote> existing = voteRepository.findByUserAndBucketItem(user, item);
-    if (existing.isPresent()) {
-        Vote vote = existing.get();
-        if (vote.getValue() == value) {
-            // toggle off: remove vote
-            item.setVoteScore(item.getVoteScore() - value);
-            voteRepository.delete(vote);
-        } else {
-            // switch vote direction
-            item.setVoteScore(item.getVoteScore() - vote.getValue() + value);
-            vote.setValue(value);
-            voteRepository.save(vote);
-        }
-    } else {
-        Vote vote = new Vote();
-        vote.setUser(user);
-        vote.setBucketItem(item);
-        vote.setValue(value);
-        voteRepository.save(vote);
-        item.setVoteScore(item.getVoteScore() + value);
-    }
-    bucketItemRepository.save(item);
-
-    BucketItemGetDTO dto = DTOMapper.INSTANCE.convertEntityToBucketItemGetDTO(item);
-    Optional<Vote> updatedVote = voteRepository.findByUserAndBucketItem(user, item);
-    dto.setMyVote(updatedVote.map(Vote::getValue).orElse(0));
-    return dto;
-}}
+}
 
