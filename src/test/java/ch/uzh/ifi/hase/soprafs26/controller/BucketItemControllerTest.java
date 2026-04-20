@@ -6,6 +6,7 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.BucketItemGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.BucketItemPatchDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.BucketItemPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.VotePostDTO;
 import ch.uzh.ifi.hase.soprafs26.service.BucketItemService;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
@@ -27,6 +28,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -158,6 +160,25 @@ public class BucketItemControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
+        @Test
+        public void addBucketItem_blankLocation_returns400() throws Exception {
+        given(bucketItemService.addBucketItem(anyLong(), any(), anyString()))
+                .willThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Location is required"));
+
+        BucketItemPostDTO postDTO = new BucketItemPostDTO();
+        postDTO.setName("Eiffel Tower");
+        postDTO.setLocation("  ");
+
+        MockHttpServletRequestBuilder postRequest = post("/trips/1/bucketItems")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer valid-token")
+                .content(asJsonString(postDTO));
+
+        mockMvc.perform(postRequest)
+                .andExpect(status().isBadRequest());
+        }
+
+
     // --- PATCH /trips/{tripId}/bucketItems/{itemId} ---
 
     @Test
@@ -241,6 +262,103 @@ public class BucketItemControllerTest {
         mockMvc.perform(deleteRequest)
                 .andExpect(status().isUnauthorized());
     }
+
+        // --- POST /trips/{tripId}/bucketItems/{itemId}/vote ---
+
+        @Test
+        public void vote_validUpvote_returns200WithUpdatedScore() throws Exception {
+        UserGetDTO addedByDTO = new UserGetDTO();
+        addedByDTO.setId(1L);
+        addedByDTO.setUsername("alice");
+
+        BucketItemGetDTO dto = new BucketItemGetDTO();
+        dto.setBucketItemId(10L);
+        dto.setName("Eiffel Tower");
+        dto.setAddedBy(addedByDTO);
+        dto.setVoteScore(1);
+        dto.setMyVote(1);
+
+        given(bucketItemService.vote(anyLong(), anyLong(), anyInt(), anyString()))
+                .willReturn(dto);
+
+        VotePostDTO voteDTO = new VotePostDTO();
+        voteDTO.setValue(1);
+
+        MockHttpServletRequestBuilder postRequest = post("/trips/1/bucketItems/10/vote")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer valid-token")
+                .content(asJsonString(voteDTO));
+
+        mockMvc.perform(postRequest)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.voteScore", is(1)))
+                .andExpect(jsonPath("$.myVote", is(1)));
+        }
+
+        @Test
+        public void vote_retractVote_returns200WithZeroScore() throws Exception {
+        UserGetDTO addedByDTO = new UserGetDTO();
+        addedByDTO.setId(1L);
+        addedByDTO.setUsername("alice");
+
+        BucketItemGetDTO dto = new BucketItemGetDTO();
+        dto.setBucketItemId(10L);
+        dto.setName("Eiffel Tower");
+        dto.setAddedBy(addedByDTO);
+        dto.setVoteScore(0);
+        dto.setMyVote(0);
+
+        given(bucketItemService.vote(anyLong(), anyLong(), anyInt(), anyString()))
+                .willReturn(dto);
+
+        VotePostDTO voteDTO = new VotePostDTO();
+        voteDTO.setValue(0);
+
+        MockHttpServletRequestBuilder postRequest = post("/trips/1/bucketItems/10/vote")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer valid-token")
+                .content(asJsonString(voteDTO));
+
+        mockMvc.perform(postRequest)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.voteScore", is(0)))
+                .andExpect(jsonPath("$.myVote", is(0)));
+        }
+
+        @Test
+        public void vote_invalidToken_returns401() throws Exception {
+        given(bucketItemService.vote(anyLong(), anyLong(), anyInt(), anyString()))
+                .willThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or missing token"));
+
+        VotePostDTO voteDTO = new VotePostDTO();
+        voteDTO.setValue(1);
+
+        MockHttpServletRequestBuilder postRequest = post("/trips/1/bucketItems/10/vote")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer bad-token")
+                .content(asJsonString(voteDTO));
+
+        mockMvc.perform(postRequest)
+                .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        public void vote_userNotMember_returns403() throws Exception {
+        given(bucketItemService.vote(anyLong(), anyLong(), anyInt(), anyString()))
+                .willThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a member of this trip"));
+
+        VotePostDTO voteDTO = new VotePostDTO();
+        voteDTO.setValue(1);
+
+        MockHttpServletRequestBuilder postRequest = post("/trips/1/bucketItems/10/vote")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer valid-token")
+                .content(asJsonString(voteDTO));
+
+        mockMvc.perform(postRequest)
+                .andExpect(status().isForbidden());
+        }
+
 
     private String asJsonString(final Object object) {
         try {

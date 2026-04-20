@@ -81,6 +81,9 @@ public class BucketItemService {
         if (newItem.getName() == null || newItem.getName().isBlank()) {         // 400 - missing required field
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Name is required");
         }
+        if (newItem.getLocation() == null || newItem.getLocation().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Location is required");
+        }
         newItem.setAddedBy(user);
         newItem.setBucketTrip(trip);
         return bucketItemRepository.save(newItem);

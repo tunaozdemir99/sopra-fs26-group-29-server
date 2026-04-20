@@ -64,7 +64,7 @@ public class ActivityServiceTest {
         testTrip.addMember(testUser);
 
         testBucketItem = new BucketItem();
-        testBucketItem.setbucketItemId(10L);
+        testBucketItem.setBucketItemId(10L);
         testBucketItem.setName("Eiffel Tower");
         testBucketItem.setBucketTrip(testTrip);
 
@@ -282,6 +282,21 @@ public class ActivityServiceTest {
 
         Mockito.verify(activityRepository, Mockito.times(1)).save(any(Activity.class));
         assertEquals("Eiffel Tower", result.getName());
+    }
+
+    @Test
+    public void scheduleFromBucket_validInput_doesNotDeleteBucketItem() {
+        Mockito.when(activityRepository.save(any())).thenReturn(testActivity);
+
+        ActivityPostDTO dto = new ActivityPostDTO();
+        dto.setBucketItemId(10L);
+        dto.setDate(LocalDate.of(2026, 8, 1));
+        dto.setStartTime(LocalTime.of(9, 0));
+        dto.setEndTime(LocalTime.of(11, 0));
+
+        activityService.scheduleFromBucket(1L, dto, "valid-token");
+
+        Mockito.verify(bucketItemRepository, Mockito.never()).delete(any());
     }
 
     @Test
