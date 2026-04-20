@@ -45,7 +45,7 @@ public class TaskService {
     }
 
     // POST /trips/{tripId}/tasks
-    public Task createTask(Long tripId, String description, Long assigneeId, String token) {
+    public Task createTask(Long tripId, String title, String description, Long assigneeId, String token) {
         User creator = userRepository.findByToken(token);
         if (creator == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or missing token");
@@ -55,8 +55,8 @@ public class TaskService {
         if (!trip.getMembers().contains(creator)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a member of this trip");
         }
-        if (description == null || description.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Description is required");
+        if (title == null || title.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Title is required");
         }
         User assignee = userRepository.findById(assigneeId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assignee not found"));
@@ -65,6 +65,7 @@ public class TaskService {
         }
 
         Task task = new Task();
+        task.setTitle(title);
         task.setDescription(description);
         task.setStatus(TaskStatus.TO_DO);
         task.setAssignee(assignee);

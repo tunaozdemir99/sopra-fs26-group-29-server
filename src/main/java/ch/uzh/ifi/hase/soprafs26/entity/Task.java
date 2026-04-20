@@ -15,6 +15,9 @@ public class Task implements Serializable {
     private Long taskId;
 
     @Column(nullable = false)
+    private String title;
+
+    @Column(nullable = false)
     private String description;
 
     @Column(nullable = false)
@@ -37,6 +40,14 @@ public class Task implements Serializable {
 
     public void setTaskId(Long taskId) { 
         this.taskId = taskId; 
+    }
+
+    public String getTitle() { 
+        return title; 
+    }
+
+    public void setTitle(String title) { 
+        this.title = title; 
     }
 
     public String getDescription() { 

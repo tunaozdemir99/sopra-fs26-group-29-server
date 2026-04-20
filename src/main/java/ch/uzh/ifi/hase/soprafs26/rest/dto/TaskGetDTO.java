@@ -5,6 +5,7 @@ import ch.uzh.ifi.hase.soprafs26.constant.TaskStatus;
 public class TaskGetDTO {
 
     private Long taskId;
+    private String title;
     private String description;
     private TaskStatus status;
     private UserGetDTO assignee;
@@ -15,6 +16,14 @@ public class TaskGetDTO {
 
     public void setTaskId(Long taskId) { 
         this.taskId = taskId; 
+    }
+
+    public String getTitle() { 
+        return title; 
+    }
+
+    public void setTitle(String title) { 
+        this.title = title; 
     }
 
     public String getDescription() { 
