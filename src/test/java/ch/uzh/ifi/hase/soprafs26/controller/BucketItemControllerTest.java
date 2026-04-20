@@ -5,6 +5,7 @@ import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.BucketItemGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.BucketItemPatchDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.BucketItemPostDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs26.service.BucketItemService;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
@@ -21,7 +22,6 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
-import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -46,9 +46,13 @@ public class BucketItemControllerTest {
     @Test
     public void getBucketItems_validToken_returns200WithList() throws Exception {
         BucketItemGetDTO dto = new BucketItemGetDTO();
+        UserGetDTO addedByDTO = new UserGetDTO();
+        addedByDTO.setId(1L);
+        addedByDTO.setUsername("alice");
+
         dto.setBucketItemId(10L);
         dto.setName("Eiffel Tower");
-        dto.setAddedBy("alice");
+        dto.setAddedBy(addedByDTO);
         dto.setVoteScore(0);
 
         given(bucketItemService.getBucketItems(anyLong(), anyString()))
@@ -62,7 +66,7 @@ public class BucketItemControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].name", is("Eiffel Tower")))
-                .andExpect(jsonPath("$[0].addedBy", is("alice")));
+                .andExpect(jsonPath("$[0].addedBy.username", is("alice")));
     }
 
     @Test
@@ -117,7 +121,7 @@ public class BucketItemControllerTest {
         mockMvc.perform(postRequest)
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name", is("Eiffel Tower")))
-                .andExpect(jsonPath("$.addedBy", is("alice")));
+                .andExpect(jsonPath("$.addedBy.username", is("alice")));
     }
 
     @Test

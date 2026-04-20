@@ -7,7 +7,7 @@ public class BucketItemGetDTO {
 	private String name;
     private String description;
     private String location;
-    private String addedBy;
+    private UserGetDTO addedBy;
     private int voteScore;
     private int myVote;
     private Double latitude;
@@ -46,11 +46,11 @@ public class BucketItemGetDTO {
 		this.location = location;
 	}
 
-    public String getAddedBy() {
+    public UserGetDTO getAddedBy() {
 		return addedBy;
 	}
 
-	public void setAddedBy(String addedBy) {
+	public void setAddedBy(UserGetDTO addedBy) {
 		this.addedBy = addedBy;
 	}
 
