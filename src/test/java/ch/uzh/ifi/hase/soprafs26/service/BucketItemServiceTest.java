@@ -57,7 +57,7 @@ public class BucketItemServiceTest {
         testTrip.addMember(testUser);
 
         testItem = new BucketItem();
-        testItem.setbucketItemId(10L);
+        testItem.setBucketItemId(10L);
         testItem.setName("Eiffel Tower");
         testItem.setAddedBy(testUser);
         testItem.setBucketTrip(testTrip);

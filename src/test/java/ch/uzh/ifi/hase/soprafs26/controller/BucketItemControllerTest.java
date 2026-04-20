@@ -104,7 +104,7 @@ public class BucketItemControllerTest {
         author.setUsername("alice");
 
         BucketItem saved = new BucketItem();
-        saved.setbucketItemId(10L);
+        saved.setBucketItemId(10L);
         saved.setName("Eiffel Tower");
         saved.setAddedBy(author);
 
@@ -167,7 +167,7 @@ public class BucketItemControllerTest {
         author.setUsername("alice");
 
         BucketItem updated = new BucketItem();
-        updated.setbucketItemId(10L);
+        updated.setBucketItemId(10L);
         updated.setName("Louvre");
         updated.setAddedBy(author);
 

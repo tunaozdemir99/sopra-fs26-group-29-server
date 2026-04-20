@@ -52,11 +52,11 @@ public class BucketItem implements Serializable {
     private int voteScore = 0;  
 
     // getters & setters
-    public Long getbucketItemId() {
+    public Long getBucketItemId() {
         return bucketItemId;
     }
 
-    public void setbucketItemId(Long bucketItemId) {
+    public void setBucketItemId(Long bucketItemId) {
         this.bucketItemId = bucketItemId;
     }
 

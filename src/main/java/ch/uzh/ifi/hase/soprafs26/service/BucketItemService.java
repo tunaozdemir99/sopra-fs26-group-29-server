@@ -3,11 +3,13 @@ package ch.uzh.ifi.hase.soprafs26.service;
 import ch.uzh.ifi.hase.soprafs26.entity.BucketItem;
 import ch.uzh.ifi.hase.soprafs26.entity.Trip;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.entity.Vote;
 
 import ch.uzh.ifi.hase.soprafs26.repository.ActivityRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.BucketItemRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.TripRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.VoteRepository;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.BucketItemGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.BucketItemPatchDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
@@ -17,8 +19,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -28,15 +32,18 @@ public class BucketItemService {
     private final TripRepository tripRepository;
     private final UserRepository userRepository;
     private final ActivityRepository activityRepository;
+    private final VoteRepository voteRepository;
 
     public BucketItemService(BucketItemRepository bucketItemRepository,
-                             TripRepository tripRepository,
-                             UserRepository userRepository,
-                             ActivityRepository activityRepository) {
+                            TripRepository tripRepository,
+                            UserRepository userRepository,
+                            ActivityRepository activityRepository,
+                            VoteRepository voteRepository) {
         this.bucketItemRepository = bucketItemRepository;
         this.tripRepository = tripRepository;
         this.userRepository = userRepository;
         this.activityRepository = activityRepository;
+        this.voteRepository = voteRepository;
     }
 
     public List<BucketItemGetDTO> getBucketItems(Long tripId, String token) {
@@ -53,7 +60,9 @@ public class BucketItemService {
         List<BucketItemGetDTO> dtos = new ArrayList<>();
         for (BucketItem item : items) {
             BucketItemGetDTO dto = DTOMapper.INSTANCE.convertEntityToBucketItemGetDTO(item);
-            dto.setScheduled(activityRepository.existsByBucketItem_BucketItemId(item.getbucketItemId()));
+            dto.setScheduled(activityRepository.existsByBucketItem_BucketItemId(item.getBucketItemId()));
+            voteRepository.findByBucketItem_BucketItemIdAndUser_Id(item.getBucketItemId(), user.getId())
+                .ifPresent(v -> dto.setMyVote(v.getValue()));
             dtos.add(dto);
         }
         return dtos;
@@ -124,6 +133,43 @@ public class BucketItemService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the author can delete this item");
 
         bucketItemRepository.delete(item);
+    }
+
+
+    public BucketItemGetDTO vote(Long tripId, Long itemId, int value, String token) {
+        User user = userRepository.findByToken(token);
+        if (user == null)
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or missing token");
+
+        Trip trip = tripRepository.findById(tripId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trip not found"));
+        if (!trip.getMembers().contains(user))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a member of this trip");
+
+        BucketItem item = bucketItemRepository.findById(itemId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Bucket item not found"));
+
+        Optional<Vote> existing = voteRepository.findByBucketItem_BucketItemIdAndUser_Id(itemId, user.getId());
+
+        if (value == 0) {
+            existing.ifPresent(voteRepository::delete);
+        } else {
+            Vote vote = existing.orElseGet(Vote::new);
+            vote.setUser(user);
+            vote.setBucketItem(item);
+            vote.setValue(value);
+            voteRepository.save(vote);
+        }
+
+        int newScore = voteRepository.findByBucketItem_BucketItemId(itemId)
+            .stream().mapToInt(Vote::getValue).sum();
+        item.setVoteScore(newScore);
+        bucketItemRepository.save(item);
+
+        BucketItemGetDTO dto = DTOMapper.INSTANCE.convertEntityToBucketItemGetDTO(item);
+        dto.setScheduled(activityRepository.existsByBucketItem_BucketItemId(itemId));
+        dto.setMyVote(value == 0 ? 0 : value);
+        return dto;
     }
 
 }
