@@ -21,7 +21,7 @@ public class Vote implements Serializable {
     @JoinColumn(name = "bucket_item_id", nullable = false)
     private BucketItem bucketItem;
 
-    @Column(nullable = false)
+    @Column(name = "vote_value", nullable = false)
     private int value; // +1 or -1
 
     public Long getId() { 
