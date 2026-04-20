@@ -77,6 +77,7 @@ public interface DTOMapper {
     BucketItemGetDTO convertEntityToBucketItemGetDTO(BucketItem bucketItem);
 
     @Mapping(source = "taskId", target = "taskId")
+    @Mapping(source = "title", target = "title")
     @Mapping(source = "description", target = "description")
     @Mapping(source = "status", target = "status")
     @Mapping(source = "assignee", target = "assignee")

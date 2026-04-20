@@ -40,7 +40,7 @@ public class TaskController {
             @RequestBody TaskPostDTO dto,
             @RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
-        Task task = taskService.createTask(tripId, dto.getDescription(), dto.getAssigneeId(), token);
+        Task task = taskService.createTask(tripId, dto.getTitle(), dto.getDescription(), dto.getAssigneeId(), token);
         return DTOMapper.INSTANCE.convertEntityToTaskGetDTO(task);
     }
 
