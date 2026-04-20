@@ -3,6 +3,7 @@ package ch.uzh.ifi.hase.soprafs26.controller;
 import ch.uzh.ifi.hase.soprafs26.entity.BucketItem;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.BucketItemGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.BucketItemPostDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.VotePostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.BucketItemPatchDTO; 
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs26.service.BucketItemService;
@@ -63,5 +64,15 @@ public class BucketItemController {
         bucketItemService.deleteBucketItem(tripId, itemId, token);
     }
 
+    @PostMapping("/trips/{tripId}/bucketItems/{itemId}/vote")
+    @ResponseStatus(HttpStatus.OK)
+    public BucketItemGetDTO vote(
+            @PathVariable Long tripId,
+            @PathVariable Long itemId,
+            @RequestBody VotePostDTO dto,
+            @RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.replace("Bearer ", "");
+        return bucketItemService.vote(tripId, itemId, dto.getValue(), token);
+    }
 
 }
