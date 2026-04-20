@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface ActivityRepository extends JpaRepository<Activity, Long> {
     List<Activity> findByActivityTrip_TripId(Long tripId);
+    boolean existsByBucketItem_BucketItemId(Long bucketItemId);
 }

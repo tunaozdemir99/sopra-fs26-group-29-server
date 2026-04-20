@@ -3,6 +3,7 @@ package ch.uzh.ifi.hase.soprafs26.service;
 import ch.uzh.ifi.hase.soprafs26.entity.BucketItem;
 import ch.uzh.ifi.hase.soprafs26.entity.Trip;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.repository.ActivityRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.BucketItemRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.TripRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
@@ -31,6 +32,8 @@ public class BucketItemServiceTest {
     private TripRepository tripRepository;
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private ActivityRepository activityRepository;
 
     @InjectMocks
     private BucketItemService bucketItemService;
@@ -96,11 +99,24 @@ public class BucketItemServiceTest {
     public void getBucketItems_validMember_returnsItems() {
         Mockito.when(bucketItemRepository.findByBucketTrip_TripId(1L))
                 .thenReturn(Collections.singletonList(testItem));
+        Mockito.when(activityRepository.existsByBucketItem_BucketItemId(10L)).thenReturn(false);
 
         List<BucketItemGetDTO> result = bucketItemService.getBucketItems(1L, "valid-token");
 
         assertEquals(1, result.size());
         assertEquals("Eiffel Tower", result.get(0).getName());
+        assertFalse(result.get(0).isScheduled());
+    }
+
+    @Test
+    public void getBucketItems_scheduledItem_returnsIsScheduledTrue() {
+        Mockito.when(bucketItemRepository.findByBucketTrip_TripId(1L))
+                .thenReturn(Collections.singletonList(testItem));
+        Mockito.when(activityRepository.existsByBucketItem_BucketItemId(10L)).thenReturn(true);
+
+        List<BucketItemGetDTO> result = bucketItemService.getBucketItems(1L, "valid-token");
+
+        assertTrue(result.get(0).isScheduled());
     }
 
     // --- addBucketItem ---

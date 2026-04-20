@@ -4,6 +4,7 @@ import ch.uzh.ifi.hase.soprafs26.entity.BucketItem;
 import ch.uzh.ifi.hase.soprafs26.entity.Trip;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 
+import ch.uzh.ifi.hase.soprafs26.repository.ActivityRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.BucketItemRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.TripRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
@@ -26,13 +27,16 @@ public class BucketItemService {
     private final BucketItemRepository bucketItemRepository;
     private final TripRepository tripRepository;
     private final UserRepository userRepository;
+    private final ActivityRepository activityRepository;
 
     public BucketItemService(BucketItemRepository bucketItemRepository,
                              TripRepository tripRepository,
-                             UserRepository userRepository) {
+                             UserRepository userRepository,
+                             ActivityRepository activityRepository) {
         this.bucketItemRepository = bucketItemRepository;
         this.tripRepository = tripRepository;
         this.userRepository = userRepository;
+        this.activityRepository = activityRepository;
     }
 
     public List<BucketItemGetDTO> getBucketItems(Long tripId, String token) {
@@ -49,6 +53,7 @@ public class BucketItemService {
         List<BucketItemGetDTO> dtos = new ArrayList<>();
         for (BucketItem item : items) {
             BucketItemGetDTO dto = DTOMapper.INSTANCE.convertEntityToBucketItemGetDTO(item);
+            dto.setScheduled(activityRepository.existsByBucketItem_BucketItemId(item.getbucketItemId()));
             dtos.add(dto);
         }
         return dtos;

@@ -11,6 +11,7 @@ public class ActivityGetDTO {
     private LocalTime startTime;
     private LocalTime endTime;
     private boolean fromBucketItem;
+    private Long bucketItemId;
 
     private String locationName;
     private Double latitude;
@@ -66,9 +67,12 @@ public class ActivityGetDTO {
         return fromBucketItem; 
     }
 
-    public void setFromBucketItem(boolean fromBucketItem) { 
-        this.fromBucketItem = fromBucketItem; 
+    public void setFromBucketItem(boolean fromBucketItem) {
+        this.fromBucketItem = fromBucketItem;
     }
+
+    public Long getBucketItemId() { return bucketItemId; }
+    public void setBucketItemId(Long bucketItemId) { this.bucketItemId = bucketItemId; }
 
     public String getLocationName() {
         return locationName;

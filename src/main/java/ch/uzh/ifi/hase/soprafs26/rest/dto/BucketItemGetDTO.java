@@ -12,6 +12,7 @@ public class BucketItemGetDTO {
     private int myVote;
     private Double latitude;
     private Double longitude;
+    private boolean isScheduled;
 
 	public Long getBucketItemId() {
 		return bucketItemId;
@@ -74,4 +75,7 @@ public class BucketItemGetDTO {
 
     public Double getLongitude() { return longitude; }
     public void setLongitude(Double longitude) { this.longitude = longitude; }
+
+    public boolean isScheduled() { return isScheduled; }
+    public void setScheduled(boolean isScheduled) { this.isScheduled = isScheduled; }
 }
