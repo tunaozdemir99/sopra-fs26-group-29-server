@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
 
 import static org.hamcrest.Matchers.is;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -101,6 +102,46 @@ public class TripControllerTest {
 
         mockMvc.perform(postRequest)
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void getTrip_validMember_returnsTrip() throws Exception {
+        User admin = new User();
+        admin.setId(1L);
+        admin.setUsername("alice");
+
+        Trip trip = new Trip();
+        trip.setTripId(1L);
+        trip.setTitle("Paris 2026");
+        trip.setLocation("Paris");
+        trip.setStartDate(LocalDate.of(2026, 8, 1));
+        trip.setEndDate(LocalDate.of(2026, 8, 10));
+        trip.setCreatedAt(LocalDateTime.of(2026, 6, 15, 10, 0));
+        trip.setInviteUrl("abc123");
+        trip.setAdmin(admin);
+
+        given(tripService.getTripById(Mockito.eq(1L), Mockito.anyString())).willReturn(trip);
+
+        MockHttpServletRequestBuilder getRequest = get("/trips/1")
+                .header("Authorization", "Bearer valid-token");
+
+        mockMvc.perform(getRequest)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tripId", is(1)))
+                .andExpect(jsonPath("$.title", is("Paris 2026")))
+                .andExpect(jsonPath("$.adminUsername", is("alice")));
+    }
+
+    @Test
+    public void getTrip_notMember_returnsForbidden() throws Exception {
+        given(tripService.getTripById(Mockito.anyLong(), Mockito.anyString()))
+                .willThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Not a member"));
+
+        MockHttpServletRequestBuilder getRequest = get("/trips/1")
+                .header("Authorization", "Bearer some-token");
+
+        mockMvc.perform(getRequest)
+                .andExpect(status().isForbidden());
     }
 
     private String asJsonString(final Object object) {

@@ -7,6 +7,9 @@ import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.entity.BucketItem;
+import ch.uzh.ifi.hase.soprafs26.entity.Task;
+import ch.uzh.ifi.hase.soprafs26.entity.Activity;
 
 /**
  * DTOMapper
@@ -67,4 +70,32 @@ public interface DTOMapper {
     @Mapping(source = "latitude", target = "latitude")
     @Mapping(source = "longitude", target = "longitude")
     PinGetDTO convertEntityToPinGetDTO(Pin pin);
+
+    // bucket mappings
+    @Mapping(source = "name", target = "name")
+    @Mapping(source = "description", target = "description")
+    @Mapping(source = "location", target = "location")
+    @Mapping(source = "latitude", target = "latitude")
+    @Mapping(source = "longitude", target = "longitude")
+    BucketItem convertBucketItemPostDTOtoEntity(BucketItemPostDTO bucketItemPostDTO);
+
+    @Mapping(source = "bucketItemId", target = "bucketItemId")
+    @Mapping(source = "name", target = "name")
+    @Mapping(source = "description", target = "description")
+    @Mapping(source = "location", target = "location")
+    @Mapping(source = "addedBy", target = "addedBy")
+    @Mapping(source = "voteScore", target = "voteScore")
+    @Mapping(source = "latitude", target = "latitude")
+    @Mapping(source = "longitude", target = "longitude")
+    BucketItemGetDTO convertEntityToBucketItemGetDTO(BucketItem bucketItem);
+
+    @Mapping(source = "taskId", target = "taskId")
+    @Mapping(source = "title", target = "title")
+    @Mapping(source = "description", target = "description")
+    @Mapping(source = "status", target = "status")
+    @Mapping(source = "assignee", target = "assignee")
+    TaskGetDTO convertEntityToTaskGetDTO(Task task);
+
+    @Mapping(source = "bucketItem.bucketItemId", target = "bucketItemId")
+    ActivityGetDTO convertEntityToActivityGetDTO(Activity activity);
 }

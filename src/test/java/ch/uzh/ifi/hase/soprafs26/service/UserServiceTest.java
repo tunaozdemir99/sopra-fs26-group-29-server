@@ -12,6 +12,8 @@ import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class UserServiceTest {
@@ -78,6 +80,55 @@ public class UserServiceTest {
 		// then -> attempt to create second user with same user -> check that an error
 		// is thrown
 		assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser));
+	}
+
+	// --- logoutUser ---
+
+	@Test
+	public void logoutUser_userNotFound_throwsNotFound() {
+		Mockito.when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+		assertThrows(ResponseStatusException.class, () -> userService.logoutUser(99L, "valid-token"));
+	}
+
+	@Test
+	public void logoutUser_wrongToken_throwsUnauthorized() {
+		testUser.setToken("correct-token");
+		Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+
+		assertThrows(ResponseStatusException.class, () -> userService.logoutUser(1L, "wrong-token"));
+	}
+
+	@Test
+	public void logoutUser_validToken_setsOfflineAndNullsToken() {
+		testUser.setToken("valid-token");
+		Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+		Mockito.when(userRepository.save(Mockito.any())).thenReturn(testUser);
+
+		userService.logoutUser(1L, "valid-token");
+
+		assertNull(testUser.getToken());
+		assertEquals(UserStatus.OFFLINE, testUser.getStatus());
+		Mockito.verify(userRepository, Mockito.times(1)).save(testUser);
+	}
+
+	// --- getUserById ---
+
+	@Test
+	public void getUserById_userNotFound_throwsNotFound() {
+		Mockito.when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+		assertThrows(ResponseStatusException.class, () -> userService.getUserById(99L));
+	}
+
+	@Test
+	public void getUserById_validId_returnsUser() {
+		Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+
+		User found = userService.getUserById(1L);
+
+		assertEquals(testUser.getId(), found.getId());
+		assertEquals(testUser.getUsername(), found.getUsername());
 	}
 
 }

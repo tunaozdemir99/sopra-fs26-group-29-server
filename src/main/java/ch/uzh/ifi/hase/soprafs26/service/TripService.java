@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -64,6 +65,7 @@ public class TripService {
         newTrip.setAdmin(creator);
         newTrip.setCreatedAt(LocalDateTime.now());
         newTrip.setInviteUrl(UUID.randomUUID().toString());
+        newTrip.addMember(creator);     // adding the admin to the set of trip members
 
         newTrip = tripRepository.save(newTrip);
         tripRepository.flush();
@@ -72,9 +74,37 @@ public class TripService {
         return newTrip;
     }
 
-    public Trip getTripById(Long tripId) {
-        return tripRepository.findById(tripId)
+    public Trip getTripById(Long tripId, String token) {
+        // authenticate user
+        User user = userRepository.findByToken(token);
+        if (user == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED, "Invalid or missing token");
+        }
+
+        // find trip
+        Trip trip = tripRepository.findById(tripId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Trip not found"));
+
+        // authorization: only trip members can access
+        // TODO: extend to all trip members once Member entity is implemented (S5)
+        if (!trip.getAdmin().getId().equals(user.getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "User is not a member of this trip");
+        }
+
+        return trip;
+    }
+
+    public List<Trip> getTripsByUser(Long userId, String token) {
+        User requester = userRepository.findByToken(token);
+        if (requester == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or missing token");
+        }
+        if (!requester.getId().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only view your own trips");
+        }
+        return tripRepository.findByMembers_Id(userId);
     }
 }

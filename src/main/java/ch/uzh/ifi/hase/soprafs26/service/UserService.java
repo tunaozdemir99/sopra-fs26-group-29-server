@@ -87,11 +87,15 @@ public class UserService {
 		return userByUsername;
 	}
 
-	public void logoutUser(Long userId) {
+	public void logoutUser(Long userId, String token) {
 		User user = userRepository.findById(userId).orElseThrow(() ->
 			new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-		user.setToken(null); // invalidate session token
+		if (token == null || !token.equals(user.getToken())) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or missing token");
+		}
+
+		user.setToken(null);
 		user.setStatus(UserStatus.OFFLINE);
 		userRepository.save(user);
 		userRepository.flush();

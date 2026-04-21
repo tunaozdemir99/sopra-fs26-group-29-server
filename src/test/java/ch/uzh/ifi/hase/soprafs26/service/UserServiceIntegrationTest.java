@@ -136,7 +136,7 @@ public class UserServiceIntegrationTest {
 		User loggedInUser = userService.loginUser(loginUser);
 
 		// when
-		userService.logoutUser(loggedInUser.getId());
+		userService.logoutUser(loggedInUser.getId(), loggedInUser.getToken());
 
 		// then
 		User afterLogout = userService.getUserById(loggedInUser.getId());
@@ -149,6 +149,6 @@ public class UserServiceIntegrationTest {
     	// given - no user exists with this id
 
     	// when / then
-   		assertThrows(ResponseStatusException.class, () -> userService.logoutUser(999L));
+		assertThrows(ResponseStatusException.class, () -> userService.logoutUser(999L, "any-token"));
 }
 }

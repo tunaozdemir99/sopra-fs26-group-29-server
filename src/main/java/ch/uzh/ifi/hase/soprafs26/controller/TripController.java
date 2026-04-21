@@ -3,10 +3,14 @@ package ch.uzh.ifi.hase.soprafs26.controller;
 import ch.uzh.ifi.hase.soprafs26.entity.Trip;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TripGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TripPostDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs26.service.TripService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * ClassName: TripController
@@ -45,10 +49,38 @@ public class TripController {
 
     @GetMapping("/trips/{tripId}")
     @ResponseStatus(HttpStatus.OK)
-    public TripGetDTO getTrip(@PathVariable Long tripId) {
+    public TripGetDTO getTrip(
+            @PathVariable Long tripId,
+            @RequestHeader("Authorization") String token) {
 
-        Trip trip = tripService.getTripById(tripId);
+        String rawToken = token.replace("Bearer ", "");
+        Trip trip = tripService.getTripById(tripId, rawToken);
 
         return DTOMapper.INSTANCE.convertEntityToTripGetDTO(trip);
+    }
+
+    @GetMapping("/users/{userId}/trips")
+    @ResponseStatus(HttpStatus.OK)
+    public List<TripGetDTO> getTripsForUser(
+            @PathVariable Long userId,
+            @RequestHeader("Authorization") String token) {
+
+        String rawToken = token.replace("Bearer ", "");
+        List<Trip> trips = tripService.getTripsByUser(userId, rawToken);
+        return trips.stream()
+                .map(DTOMapper.INSTANCE::convertEntityToTripGetDTO)
+                .collect(Collectors.toList());
+    }
+
+    @GetMapping("/trips/{tripId}/members")
+    @ResponseStatus(HttpStatus.OK)
+    public List<UserGetDTO> getTripMembers(
+            @PathVariable Long tripId,
+            @RequestHeader("Authorization") String token) {
+        String rawToken = token.replace("Bearer ", "");
+        Trip trip = tripService.getTripById(tripId, rawToken);
+        return trip.getMembers().stream()
+                .map(DTOMapper.INSTANCE::convertEntityToUserGetDTO)
+                .collect(Collectors.toList());
     }
 }

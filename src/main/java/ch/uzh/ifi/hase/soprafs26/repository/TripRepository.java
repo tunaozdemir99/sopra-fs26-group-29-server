@@ -4,6 +4,7 @@ import ch.uzh.ifi.hase.soprafs26.entity.Trip;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -19,4 +20,6 @@ import java.util.Optional;
 public interface TripRepository extends JpaRepository<Trip, Long> {
     // prepared for S5
     Optional<Trip> findByInviteUrl(String inviteUrl);
+
+    List<Trip> findByMembers_Id(Long userId);
 }
