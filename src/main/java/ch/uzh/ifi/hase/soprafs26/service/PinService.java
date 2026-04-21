@@ -46,4 +46,25 @@ public class PinService {
 
         return pinRepository.findByTrip_TripId(tripId);
     }
+
+    public Pin createPin(Long tripId, Pin newPin) {
+        var trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Trip not found"));
+
+        if (newPin.getName() == null || newPin.getName().isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Pin name is required");
+        }
+        if (newPin.getLatitude() == null || newPin.getLongitude() == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Latitude and longitude are required");
+        }
+
+        newPin.setTrip(trip);
+        newPin = pinRepository.save(newPin);
+        pinRepository.flush();
+
+        return newPin;
+    }
 }

@@ -2,13 +2,11 @@ package ch.uzh.ifi.hase.soprafs26.controller;
 
 import ch.uzh.ifi.hase.soprafs26.entity.Pin;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.PinGetDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.PinPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs26.service.PinService;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -37,5 +35,17 @@ public class PinController {
         return pins.stream()
                 .map(DTOMapper.INSTANCE::convertEntityToPinGetDTO)
                 .toList();
+    }
+
+    @PostMapping("/trips/{tripId}/pins")
+    @ResponseStatus(HttpStatus.CREATED)
+    public PinGetDTO createPin(
+            @PathVariable Long tripId,
+            @RequestBody PinPostDTO pinPostDTO) {
+
+        Pin pinInput = DTOMapper.INSTANCE.convertPinPostDTOtoEntity(pinPostDTO);
+        Pin createdPin = pinService.createPin(tripId, pinInput);
+
+        return DTOMapper.INSTANCE.convertEntityToPinGetDTO(createdPin);
     }
 }
