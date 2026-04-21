@@ -48,4 +48,13 @@ public class PinController {
 
         return DTOMapper.INSTANCE.convertEntityToPinGetDTO(createdPin);
     }
+
+    @DeleteMapping("/trips/{tripId}/pins/{pinId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deletePin(
+            @PathVariable Long tripId,
+            @PathVariable Long pinId) {
+
+        pinService.deletePin(tripId, pinId);
+    }
 }

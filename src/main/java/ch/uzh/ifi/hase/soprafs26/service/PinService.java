@@ -67,4 +67,22 @@ public class PinService {
 
         return newPin;
     }
+
+    public void deletePin(Long tripId, Long pinId) {
+        tripRepository.findById(tripId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Trip not found"));
+
+        Pin pin = pinRepository.findById(pinId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Pin not found"));
+
+        if (!pin.getTrip().getTripId().equals(tripId)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Pin does not belong to this trip");
+        }
+
+        pinRepository.delete(pin);
+        pinRepository.flush();
+    }
 }
