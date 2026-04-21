@@ -1,5 +1,6 @@
 package ch.uzh.ifi.hase.soprafs26.rest.mapper;
 
+import ch.uzh.ifi.hase.soprafs26.entity.Pin;
 import ch.uzh.ifi.hase.soprafs26.entity.Trip;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.*;
 import org.mapstruct.*;
@@ -57,6 +58,18 @@ public interface DTOMapper {
     @Mapping(source = "inviteUrl", target = "inviteUrl")
     @Mapping(source = "admin.username", target = "adminUsername")
     TripGetDTO convertEntityToTripGetDTO(Trip trip);
+
+    // Pin mappings
+    @Mapping(source = "name", target = "name")
+    @Mapping(source = "latitude", target = "latitude")
+    @Mapping(source = "longitude", target = "longitude")
+    Pin convertPinPostDTOtoEntity(PinPostDTO pinPostDTO);
+
+    @Mapping(source = "pinId", target = "pinId")
+    @Mapping(source = "name", target = "name")
+    @Mapping(source = "latitude", target = "latitude")
+    @Mapping(source = "longitude", target = "longitude")
+    PinGetDTO convertEntityToPinGetDTO(Pin pin);
 
     // bucket mappings
     @Mapping(source = "name", target = "name")
