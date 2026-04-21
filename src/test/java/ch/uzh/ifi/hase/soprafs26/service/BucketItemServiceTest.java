@@ -370,7 +370,9 @@ public class BucketItemServiceTest {
 
         BucketItemGetDTO result = bucketItemService.vote(1L, 10L, -1, "valid-token");
 
-        assertEquals(-1, existing.getValue()); // vote was mutated in place
+        assertEquals(-1, existing.getValue());
+        assertEquals(-1, result.getVoteScore());
+        assertEquals(-1, result.getMyVote());
         Mockito.verify(voteRepository).save(existing);
     }
 
