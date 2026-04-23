@@ -6,6 +6,7 @@ import java.time.LocalTime;
 public class ActivityPostDTO {
 
     private Long bucketItemId;
+    private String name;
     private LocalDate date;
     private LocalTime startTime;
     private LocalTime endTime;
@@ -13,12 +14,20 @@ public class ActivityPostDTO {
     private Double latitude;
     private Double longitude;
 
-    public Long getBucketItemId() { 
-        return bucketItemId; 
+    public Long getBucketItemId() {
+        return bucketItemId;
     }
 
-    public void setBucketItemId(Long bucketItemId) { 
-        this.bucketItemId = bucketItemId; 
+    public void setBucketItemId(Long bucketItemId) {
+        this.bucketItemId = bucketItemId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public LocalDate getDate() { 

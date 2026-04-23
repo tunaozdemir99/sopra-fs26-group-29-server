@@ -117,25 +117,35 @@ public class ActivityService {
         if (!trip.getMembers().contains(user)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a member of this trip");
         }
-        BucketItem bucketItem = bucketItemRepository.findById(activityPostDTO.getBucketItemId())
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Bucket item not found"));
-
-        if (!bucketItem.getBucketTrip().getTripId().equals(tripId)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bucket item does not belong to this trip");
-        }
         validateActivityTimes(activityPostDTO.getDate(), activityPostDTO.getStartTime(), activityPostDTO.getEndTime());
 
         Activity activity = new Activity();
-        activity.setName(bucketItem.getName());
         activity.setDate(activityPostDTO.getDate());
         activity.setStartTime(activityPostDTO.getStartTime());
         activity.setEndTime(activityPostDTO.getEndTime());
-        activity.setFromBucketItem(true);
         activity.setActivityTrip(trip);
-        activity.setBucketItem(bucketItem);
-        activity.setLocationName(activityPostDTO.getLocationName() != null ? activityPostDTO.getLocationName() : bucketItem.getLocation());
         activity.setLatitude(activityPostDTO.getLatitude());
         activity.setLongitude(activityPostDTO.getLongitude());
+
+        if (activityPostDTO.getBucketItemId() != null) {
+            BucketItem bucketItem = bucketItemRepository.findById(activityPostDTO.getBucketItemId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Bucket item not found"));
+            if (!bucketItem.getBucketTrip().getTripId().equals(tripId)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bucket item does not belong to this trip");
+            }
+            activity.setName(bucketItem.getName());
+            activity.setFromBucketItem(true);
+            activity.setBucketItem(bucketItem);
+            activity.setLocationName(activityPostDTO.getLocationName() != null ? activityPostDTO.getLocationName() : bucketItem.getLocation());
+        } else {
+            if (activityPostDTO.getName() == null || activityPostDTO.getName().isBlank()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "name is required when not scheduling from bucket");
+            }
+            activity.setName(activityPostDTO.getName());
+            activity.setFromBucketItem(false);
+            activity.setLocationName(activityPostDTO.getLocationName());
+        }
+
         return activityRepository.save(activity);
     }
 
