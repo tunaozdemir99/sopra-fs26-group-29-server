@@ -403,4 +403,71 @@ public class ActivityServiceTest {
 
         Mockito.verify(activityRepository, Mockito.times(1)).delete(testActivity);
     }
+
+    // --- auto-resolve ---
+
+    @Test
+    public void getTimeline_afterRemovingConflictingActivity_conflictClears() {
+        Activity first = new Activity();
+        first.setActivityId(1L);
+        first.setName("First");
+        first.setDate(LocalDate.of(2026, 8, 1));
+        first.setStartTime(LocalTime.of(10, 0));
+        first.setEndTime(LocalTime.of(12, 0));
+
+        Activity second = new Activity();
+        second.setActivityId(2L);
+        second.setName("Second");
+        second.setDate(LocalDate.of(2026, 8, 1));
+        second.setStartTime(LocalTime.of(11, 0));
+        second.setEndTime(LocalTime.of(13, 0));
+
+        // both activities present — overlap expected
+        Mockito.when(activityRepository.findByActivityTrip_TripId(1L))
+                .thenReturn(Arrays.asList(first, second));
+        List<ActivityGetDTO> withConflict = activityService.getTimeline(1L, "valid-token");
+        assertTrue(withConflict.get(0).getHasOverlapConflict());
+
+        // second activity removed — conflict should clear
+        Mockito.when(activityRepository.findByActivityTrip_TripId(1L))
+                .thenReturn(Arrays.asList(first));
+        List<ActivityGetDTO> afterRemoval = activityService.getTimeline(1L, "valid-token");
+        assertFalse(afterRemoval.get(0).getHasOverlapConflict());
+    }
+
+    @Test
+    public void getTimeline_afterReschedulingConflictingActivity_conflictClears() {
+        Activity first = new Activity();
+        first.setActivityId(1L);
+        first.setName("First");
+        first.setDate(LocalDate.of(2026, 8, 1));
+        first.setStartTime(LocalTime.of(10, 0));
+        first.setEndTime(LocalTime.of(12, 0));
+
+        Activity overlapping = new Activity();
+        overlapping.setActivityId(2L);
+        overlapping.setName("Second");
+        overlapping.setDate(LocalDate.of(2026, 8, 1));
+        overlapping.setStartTime(LocalTime.of(11, 0));
+        overlapping.setEndTime(LocalTime.of(13, 0));
+
+        // overlap present
+        Mockito.when(activityRepository.findByActivityTrip_TripId(1L))
+                .thenReturn(Arrays.asList(first, overlapping));
+        List<ActivityGetDTO> withConflict = activityService.getTimeline(1L, "valid-token");
+        assertTrue(withConflict.get(0).getHasOverlapConflict());
+
+        // second activity rescheduled to start after first ends
+        Activity rescheduled = new Activity();
+        rescheduled.setActivityId(2L);
+        rescheduled.setName("Second");
+        rescheduled.setDate(LocalDate.of(2026, 8, 1));
+        rescheduled.setStartTime(LocalTime.of(13, 0));
+        rescheduled.setEndTime(LocalTime.of(15, 0));
+
+        Mockito.when(activityRepository.findByActivityTrip_TripId(1L))
+                .thenReturn(Arrays.asList(first, rescheduled));
+        List<ActivityGetDTO> afterReschedule = activityService.getTimeline(1L, "valid-token");
+        assertFalse(afterReschedule.get(0).getHasOverlapConflict());
+    }
 }
