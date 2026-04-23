@@ -16,12 +16,12 @@ public class ActivityGetDTO {
     private String locationName;
     private Double latitude;
     private Double longitude;
+    // Future extension: add placeId once place-details persistence is introduced
+    private Integer durationMinutes;
+    private Integer gapToNextActivityMinutes;
     private Integer travelTimeToNextActivity;
-
-    // TODO: location (name, lat, lng, placeId) — add when Google Maps is integrated
-    // TODO: travelTimeToNextMinutes — add when timeline conflict logic is implemented
-    // TODO: hasOverlapConflict — add when timeline conflict logic is implemented
-    // TODO: hasTravelTimeConflict — add when timeline conflict logic is implemented
+    private Boolean hasOverlapConflict;
+    private Boolean hasTravelTimeConflict;
 
     public Long getActivityId() { 
         return activityId; 
@@ -104,6 +104,38 @@ public class ActivityGetDTO {
 
      public void setTravelTimeToNextActivity(Integer travelTimeToNextActivity) {
       this.travelTimeToNextActivity = travelTimeToNextActivity;                                                                                                                                   
-  } 
+  }
+
+    public Integer getDurationMinutes() {
+        return durationMinutes;
+    }
+
+    public void setDurationMinutes(Integer durationMinutes) {
+        this.durationMinutes = durationMinutes;
+    }
+
+    public Integer getGapToNextActivityMinutes() {
+        return gapToNextActivityMinutes;
+    }
+
+    public void setGapToNextActivityMinutes(Integer gapToNextActivityMinutes) {
+        this.gapToNextActivityMinutes = gapToNextActivityMinutes;
+    }
+
+    public Boolean getHasOverlapConflict() {
+        return hasOverlapConflict;
+    }
+
+    public void setHasOverlapConflict(Boolean hasOverlapConflict) {
+        this.hasOverlapConflict = hasOverlapConflict;
+    }
+
+    public Boolean getHasTravelTimeConflict() {
+        return hasTravelTimeConflict;
+    }
+
+    public void setHasTravelTimeConflict(Boolean hasTravelTimeConflict) {
+        this.hasTravelTimeConflict = hasTravelTimeConflict;
+    }
 
 }

@@ -133,6 +133,12 @@ public class ActivityServiceTest {
         assertEquals(2, result.size());
         assertEquals("Morning", result.get(0).getName());
         assertEquals("Afternoon", result.get(1).getName());
+        assertEquals(60, result.get(0).getDurationMinutes());
+        assertEquals(120, result.get(1).getDurationMinutes());
+        assertEquals(300, result.get(0).getGapToNextActivityMinutes());
+        assertNull(result.get(1).getGapToNextActivityMinutes());
+        assertFalse(result.get(0).getHasOverlapConflict());
+        assertFalse(result.get(0).getHasTravelTimeConflict());
     }
 
     @Test
@@ -163,6 +169,9 @@ public class ActivityServiceTest {
         List<ActivityGetDTO> result = activityService.getTimeline(1L, "valid-token");
 
         assertEquals(15, result.get(0).getTravelTimeToNextActivity());
+        assertEquals(120, result.get(0).getGapToNextActivityMinutes());
+        assertFalse(result.get(0).getHasOverlapConflict());
+        assertFalse(result.get(0).getHasTravelTimeConflict());
         assertNull(result.get(1).getTravelTimeToNextActivity());
     }
 
@@ -188,7 +197,42 @@ public class ActivityServiceTest {
 
         List<ActivityGetDTO> result = activityService.getTimeline(1L, "valid-token");
 
+        assertEquals(120, result.get(0).getGapToNextActivityMinutes());
         assertNull(result.get(0).getTravelTimeToNextActivity());
+        assertFalse(result.get(0).getHasOverlapConflict());
+        assertFalse(result.get(0).getHasTravelTimeConflict());
+    }
+
+    @Test
+    public void getTimeline_activitiesOnDifferentDays_gapAndTravelAreNull() {
+        Activity dayOne = new Activity();
+        dayOne.setActivityId(1L);
+        dayOne.setName("Day One");
+        dayOne.setDate(LocalDate.of(2026, 8, 1));
+        dayOne.setStartTime(LocalTime.of(9, 0));
+        dayOne.setEndTime(LocalTime.of(10, 0));
+        dayOne.setLatitude(48.8584);
+        dayOne.setLongitude(2.2945);
+
+        Activity dayTwo = new Activity();
+        dayTwo.setActivityId(2L);
+        dayTwo.setName("Day Two");
+        dayTwo.setDate(LocalDate.of(2026, 8, 2));
+        dayTwo.setStartTime(LocalTime.of(9, 0));
+        dayTwo.setEndTime(LocalTime.of(10, 0));
+        dayTwo.setLatitude(48.8606);
+        dayTwo.setLongitude(2.3376);
+
+        Mockito.when(activityRepository.findByActivityTrip_TripId(1L))
+            .thenReturn(Arrays.asList(dayOne, dayTwo));
+
+        List<ActivityGetDTO> result = activityService.getTimeline(1L, "valid-token");
+
+        assertEquals(2, result.size());
+        assertNull(result.get(0).getGapToNextActivityMinutes());
+        assertNull(result.get(0).getTravelTimeToNextActivity());
+        assertFalse(result.get(0).getHasOverlapConflict());
+        assertFalse(result.get(0).getHasTravelTimeConflict());
     }
 
     // --- scheduleFromBucket ---
