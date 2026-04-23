@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -64,22 +65,46 @@ public class ActivityService {
 
         List<ActivityGetDTO> dtos = new ArrayList<>();
         for (int i = 0; i < activities.size(); i++) {
-            ActivityGetDTO dto = DTOMapper.INSTANCE.convertEntityToActivityGetDTO(activities.get(i));
+            Activity current = activities.get(i);
+            ActivityGetDTO dto = DTOMapper.INSTANCE.convertEntityToActivityGetDTO(current);
+
+            dto.setDurationMinutes((int) Duration.between(current.getStartTime(), current.getEndTime()).toMinutes());
+            dto.setGapToNextActivityMinutes(null);
+            dto.setTravelTimeToNextActivity(null);
+            dto.setHasOverlapConflict(false);
+            dto.setHasTravelTimeConflict(false);
 
             if (i < activities.size() - 1) {
-                Activity curr = activities.get(i);
-                Activity next = activities.get(i + 1);
-                if (curr.getLatitude() != null && next.getLatitude() != null) {
-                    Integer minutes = travelTimeService.computeTravelMinutes(
-                        curr.getLatitude(), curr.getLongitude(),
-                        next.getLatitude(), next.getLongitude());
-                    dto.setTravelTimeToNextActivity(minutes);
-                }
+                applyNextActivityMetrics(dto, current, activities.get(i + 1));
             }
 
             dtos.add(dto);
         }
         return dtos;
+    }
+
+    private void applyNextActivityMetrics(ActivityGetDTO dto, Activity current, Activity next) {
+        if (!current.getDate().equals(next.getDate())) {
+            return;
+        }
+
+        int gapMinutes = (int) Duration.between(current.getEndTime(), next.getStartTime()).toMinutes();
+        dto.setGapToNextActivityMinutes(gapMinutes);
+        dto.setHasOverlapConflict(gapMinutes < 0);
+
+        if (current.getLatitude() == null || current.getLongitude() == null
+            || next.getLatitude() == null || next.getLongitude() == null) {
+            return;
+        }
+
+        Integer travelMinutes = travelTimeService.computeTravelMinutes(
+            current.getLatitude(), current.getLongitude(),
+            next.getLatitude(), next.getLongitude());
+        dto.setTravelTimeToNextActivity(travelMinutes);
+
+        if (travelMinutes != null && gapMinutes >= 0) {
+            dto.setHasTravelTimeConflict(gapMinutes < travelMinutes);
+        }
     }
 
     public Activity scheduleFromBucket(Long tripId, ActivityPostDTO activityPostDTO, String token) {
