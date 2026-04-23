@@ -359,6 +359,37 @@ public class ActivityServiceTest {
         assertEquals("Custom Location", result.getLocationName());
     }
 
+    @Test
+    public void scheduleFromBucket_noNameAndNoBucketItem_throwsBadRequest() {
+        ActivityPostDTO dto = new ActivityPostDTO();
+        dto.setDate(LocalDate.of(2026, 8, 1));
+        dto.setStartTime(LocalTime.of(9, 0));
+        dto.setEndTime(LocalTime.of(11, 0));
+
+        assertThrows(ResponseStatusException.class,
+                () -> activityService.scheduleFromBucket(1L, dto, "valid-token"));
+    }
+
+    @Test
+    public void scheduleFromBucket_directFromMap_createsActivityWithProvidedName() {
+        Mockito.when(activityRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        ActivityPostDTO dto = new ActivityPostDTO();
+        dto.setName("Zurich Lake");
+        dto.setDate(LocalDate.of(2026, 8, 1));
+        dto.setStartTime(LocalTime.of(9, 0));
+        dto.setEndTime(LocalTime.of(11, 0));
+        dto.setLocationName("Zurich Lake, Switzerland");
+        dto.setLatitude(47.3769);
+        dto.setLongitude(8.5417);
+
+        Activity result = activityService.scheduleFromBucket(1L, dto, "valid-token");
+
+        assertEquals("Zurich Lake", result.getName());
+        assertFalse(result.isFromBucketItem());
+        assertEquals("Zurich Lake, Switzerland", result.getLocationName());
+    }
+
     // --- deleteActivity ---
 
     @Test
