@@ -39,9 +39,11 @@ public class UserService {
 	}
 
 	public User createUser(User newUser) {
-		newUser.setToken(UUID.randomUUID().toString());
-		newUser.setStatus(UserStatus.OFFLINE);
+		// checks if the username is taken, throws 409 if it is
 		checkIfUserExists(newUser);
+		newUser.setToken(UUID.randomUUID().toString());
+		newUser.setStatus(UserStatus.ONLINE);
+		
 		// saves the given entity but data is only persisted in the database once
 		// flush() is called
 		newUser = userRepository.save(newUser);
@@ -63,47 +65,44 @@ public class UserService {
 	 */
 	private void checkIfUserExists(User userToBeCreated) {
 		User userByUsername = userRepository.findByUsername(userToBeCreated.getUsername());
-		User userByName = userRepository.findByName(userToBeCreated.getName());
 
 		String baseErrorMessage = "The %s provided %s not unique. Therefore, the user could not be created!";
-		if (userByUsername != null && userByName != null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-					String.format(baseErrorMessage, "username and the name", "are"));
-		} else if (userByUsername != null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format(baseErrorMessage, "username", "is"));
-		} else if (userByName != null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format(baseErrorMessage, "name", "is"));
-		}
+		if (userByUsername != null) {				// 409
+			throw new ResponseStatusException(HttpStatus.CONFLICT, String.format(baseErrorMessage, "username", "is"));
+		} 
 	}
 
 	public User loginUser(User loginUser) {
-    User userByUsername = userRepository.findByUsername(loginUser.getUsername());
+		User userByUsername = userRepository.findByUsername(loginUser.getUsername());
 
-    if (userByUsername == null || !userByUsername.getPassword().equals(loginUser.getPassword())) {
-        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
-    }
+		if (userByUsername == null || !userByUsername.getPassword().equals(loginUser.getPassword())) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid username or password");
+		}
 
-    userByUsername.setToken(UUID.randomUUID().toString()); // token gets updated on each login
-    userByUsername.setStatus(UserStatus.ONLINE);
-    userRepository.save(userByUsername);
-    userRepository.flush();
+		userByUsername.setToken(UUID.randomUUID().toString()); // token gets updated on each login
+		userByUsername.setStatus(UserStatus.ONLINE);
+		userRepository.save(userByUsername);
+		userRepository.flush();
 
-    return userByUsername;
-}
+		return userByUsername;
+	}
 
-	public void logoutUser(Long userId) {
-    User user = userRepository.findById(userId).orElseThrow(() ->
-        new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+	public void logoutUser(Long userId, String token) {
+		User user = userRepository.findById(userId).orElseThrow(() ->
+			new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-    user.setToken(null); // invalidate session token
-    user.setStatus(UserStatus.OFFLINE);
-    userRepository.save(user);
-    userRepository.flush();
-}
+		if (token == null || !token.equals(user.getToken())) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or missing token");
+		}
+
+		user.setToken(null);
+		user.setStatus(UserStatus.OFFLINE);
+		userRepository.save(user);
+		userRepository.flush();
+	}
 
 	public User getUserById(Long userId) {
-			return userRepository.findById(userId).orElseThrow(() ->
-				new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-		}
-		
+		return userRepository.findById(userId).orElseThrow(() ->
+			new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+	}	
 }
