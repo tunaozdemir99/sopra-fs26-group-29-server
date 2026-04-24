@@ -124,9 +124,6 @@ public class ActivityService {
         activity.setStartTime(activityPostDTO.getStartTime());
         activity.setEndTime(activityPostDTO.getEndTime());
         activity.setActivityTrip(trip);
-        activity.setLatitude(activityPostDTO.getLatitude());
-        activity.setLongitude(activityPostDTO.getLongitude());
-
         if (activityPostDTO.getBucketItemId() != null) {
             BucketItem bucketItem = bucketItemRepository.findById(activityPostDTO.getBucketItemId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Bucket item not found"));
@@ -137,13 +134,21 @@ public class ActivityService {
             activity.setFromBucketItem(true);
             activity.setBucketItem(bucketItem);
             activity.setLocationName(activityPostDTO.getLocationName() != null ? activityPostDTO.getLocationName() : bucketItem.getLocation());
+            activity.setLatitude(activityPostDTO.getLatitude() != null ? activityPostDTO.getLatitude() : bucketItem.getLatitude());
+            activity.setLongitude(activityPostDTO.getLongitude() != null ? activityPostDTO.getLongitude() : bucketItem.getLongitude());
         } else {
             if (activityPostDTO.getName() == null || activityPostDTO.getName().isBlank()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "name is required when not scheduling from bucket");
             }
+            if (activityPostDTO.getLatitude() == null || activityPostDTO.getLongitude() == null
+                    || activityPostDTO.getLocationName() == null || activityPostDTO.getLocationName().isBlank()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Location is required");
+            }
             activity.setName(activityPostDTO.getName());
             activity.setFromBucketItem(false);
             activity.setLocationName(activityPostDTO.getLocationName());
+            activity.setLatitude(activityPostDTO.getLatitude());
+            activity.setLongitude(activityPostDTO.getLongitude());
         }
 
         return activityRepository.save(activity);
@@ -168,6 +173,11 @@ public class ActivityService {
         }
 
         validateActivityTimes(activityPutDTO.getDate(), activityPutDTO.getStartTime(), activityPutDTO.getEndTime());
+
+        if (activityPutDTO.getLatitude() == null || activityPutDTO.getLongitude() == null
+                || activityPutDTO.getLocationName() == null || activityPutDTO.getLocationName().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Location is required");
+        }
 
         activity.setDate(activityPutDTO.getDate());
         activity.setStartTime(activityPutDTO.getStartTime());
