@@ -7,6 +7,7 @@ import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserLoginDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPatchDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
 
@@ -65,4 +66,25 @@ public class UserController {
 		User loggedInUser = userService.loginUser(userInput);
 		return DTOMapper.INSTANCE.convertEntityToUserLoginDTO(loggedInUser);
 	}
+
+	@GetMapping("/users/{id}")
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	public UserGetDTO getUserById(@PathVariable Long id) {
+		User user = userService.getUserById(id);
+		return DTOMapper.INSTANCE.convertEntityToUserGetDTO(user);
+	}
+
+	@PatchMapping("/users/{id}")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void updateUser(
+		@PathVariable Long id,
+		@RequestHeader("Authorization") String authHeader,
+		@RequestBody UserPatchDTO userPatchDTO
+	) {
+		String token = authHeader.replace("Bearer ", "");
+		User updates = DTOMapper.INSTANCE.convertUserPatchDTOtoEntity(userPatchDTO);
+		userService.updateUser(id, token, updates);
+	}
+
 }
