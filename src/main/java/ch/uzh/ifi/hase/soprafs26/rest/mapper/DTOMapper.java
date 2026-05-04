@@ -31,10 +31,17 @@ public interface DTOMapper {
 	@Mapping(source = "password", target = "password")
 	User convertUserPostDTOtoEntity(UserPostDTO userPostDTO);
 
-	@Mapping(source = "id", target = "id")
-	@Mapping(source = "username", target = "username")
-	@Mapping(source = "status", target = "status")
-	UserGetDTO convertEntityToUserGetDTO(User user);
+    @Mapping(source = "id", target = "id")
+    @Mapping(source = "username", target = "username")
+    @Mapping(source = "status", target = "status")
+    @Mapping(source = "bio", target = "bio")
+    @Mapping(source = "profilePicture", target = "profilePicture")
+    UserGetDTO convertEntityToUserGetDTO(User user);
+
+    @Mapping(source = "bio", target = "bio")
+    @Mapping(source = "profilePicture", target = "profilePicture")
+    @Mapping(source = "password", target = "password")
+    User convertUserPatchDTOtoEntity(UserPatchDTO userPatchDTO);
 
 	@Mapping(source = "id", target = "id")
 	@Mapping(source = "username", target = "username")

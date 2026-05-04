@@ -87,6 +87,23 @@ public class UserService {
 		return userByUsername;
 	}
 
+	public User updateUser(Long userId, String token, User updates) {
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+		if (token == null || !token.equals(user.getToken())) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not authorized");
+		}
+
+		if (updates.getBio() != null) user.setBio(updates.getBio());
+		if (updates.getProfilePicture() != null) user.setProfilePicture(updates.getProfilePicture());
+		if (updates.getPassword() != null) user.setPassword(updates.getPassword());
+
+		userRepository.save(user);
+		userRepository.flush();
+		return user;
+	}
+
 	public void logoutUser(Long userId, String token) {
 		User user = userRepository.findById(userId).orElseThrow(() ->
 			new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
