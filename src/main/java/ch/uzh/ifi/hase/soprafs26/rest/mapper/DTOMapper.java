@@ -94,6 +94,7 @@ public interface DTOMapper {
     @Mapping(source = "voteScore", target = "voteScore")
     @Mapping(source = "latitude", target = "latitude")
     @Mapping(source = "longitude", target = "longitude")
+    @Mapping(source = "createdAt", target = "createdAt")
     BucketItemGetDTO convertEntityToBucketItemGetDTO(BucketItem bucketItem);
 
     @Mapping(source = "taskId", target = "taskId")

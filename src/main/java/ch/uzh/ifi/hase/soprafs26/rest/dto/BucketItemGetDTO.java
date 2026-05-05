@@ -1,5 +1,6 @@
 package ch.uzh.ifi.hase.soprafs26.rest.dto;
 
+import java.time.Instant;
 
 public class BucketItemGetDTO {
 
@@ -13,6 +14,7 @@ public class BucketItemGetDTO {
     private Double latitude;
     private Double longitude;
     private boolean isScheduled;
+	private Instant createdAt;
 
 	public Long getBucketItemId() {
 		return bucketItemId;
@@ -78,4 +80,12 @@ public class BucketItemGetDTO {
 
     public boolean isScheduled() { return isScheduled; }
     public void setScheduled(boolean isScheduled) { this.isScheduled = isScheduled; }
+
+	public Instant getCreatedAt() { 
+        return createdAt; 
+    }
+
+    public void setCreatedAt(Instant createdAt) { 
+        this.createdAt = createdAt; 
+    }
 }
