@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import java.io.Serializable;
 
 @Entity
-@Table(name = "votes")
+@Table(name = "votes", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"user_id", "bucket_item_id"})
+})
 public class Vote implements Serializable {
 
     private static final long serialVersionUID = 1L;
