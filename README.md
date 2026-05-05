@@ -1,118 +1,176 @@
-# SoPra RESTful Service Template FS26
+# JointJourney — Server
 
-## Getting started with Spring Boot
--   Documentation: https://docs.spring.io/spring-boot/docs/current/reference/html/index.html
--   Guides: http://spring.io/guides
-    -   Building a RESTful Web Service: http://spring.io/guides/gs/rest-service/
-    -   Building REST services with Spring: https://spring.io/guides/tutorials/rest/
+> RESTful backend for the JointJourney collaborative travel-planning application, built as part of the Software Engineering Praktikum (SoPra) FS26 at the University of Zurich.
 
-## Setup this Template with your IDE of choice
-Download your IDE of choice (e.g., [IntelliJ](https://www.jetbrains.com/idea/download/), [Visual Studio Code](https://code.visualstudio.com/), or [Eclipse](http://www.eclipse.org/downloads/)). Make sure Java 17 is installed on your system (for Windows, please make sure your `JAVA_HOME` environment variable is set to the correct version of Java).
+[![Build & Deploy](https://github.com/tunaozdemir99/sopra-fs26-group-29-server/actions/workflows/main.yml/badge.svg)](https://github.com/tunaozdemir99/sopra-fs26-group-29-server/actions)
 
-### IntelliJ
-If you consider to use IntelliJ as your IDE of choice, you can make use of your free educational license [here](https://www.jetbrains.com/community/education/#students).
-1. File -> Open... -> SoPra server template
-2. Accept to import the project as a `gradle project`
-3. To build right click the `build.gradle` file and choose `Run Build`
+---
 
-### VS Code
-The following extensions can help you get started more easily:
--   `vmware.vscode-spring-boot`
--   `vscjava.vscode-spring-initializr`
--   `vscjava.vscode-spring-boot-dashboard`
--   `vscjava.vscode-java-pack`
+## Introduction
 
-**Note:** You'll need to build the project first with Gradle, just click on the `build` command in the _Gradle Tasks_ extension. Then check the _Spring Boot Dashboard_ extension if it already shows `soprafs26` and hit the play button to start the server. If it doesn't show up, restart VS Code and check again.
+Planning group trips often results in chaotic groupchats and messy spreadsheets, leading to
+scheduling conflicts and logistical stress. **JointJourney** motivates a more collaborative approach by providing a unified, real-time workspace for itinerary design, by leveraging the Google Maps API. We propose a synchronized application that allows users to timeline their activities, while automatically calculating travel times between locations and flagging scheduling overlaps.
+JointJourney provides quasi real-time collaboration through a synchronized voting system, a shared itinerary, an idea bucket and much more. We make organising trips easier and fun!
+---
 
-## Building with Gradle
-You can use the local Gradle Wrapper to build the application.
--   macOS: `./gradlew`
--   Linux: `./gradlew`
--   Windows: `./gradlew.bat`
+## Technologies
 
-More Information about [Gradle Wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html) and [Gradle](https://gradle.org/docs/).
+| Layer | Technology |
+|---|---|
+| Language | Java 17 |
+| Framework | Spring Boot 4.0.0 |
+| Database | H2 (in-memory, development) |
+| ORM | Spring Data JPA / Hibernate |
+| DTO mapping | MapStruct 1.5.5 |
+| Build tool | Gradle (Wrapper included) |
+| Testing | JUnit 5, Spring Boot Test |
+| Code quality | SonarCloud, JaCoCo |
+| Containerisation | Docker (multi-stage build) |
+| Deployment | Google App Engine (Standard, Java 17) |
+| External API | Google Maps Routes API (travel-time estimation) |
+
+---
+
+## High-Level Components
+
+### 1. User Management — [`UserService`](src/main/java/ch/uzh/ifi/hase/soprafs26/service/UserService.java) · [`UserController`](src/main/java/ch/uzh/ifi/hase/soprafs26/controller/UserController.java)
+
+Handles registration, login, and logout. On every successful login a fresh UUID token is issued and stored on the `User` entity; all subsequent requests must supply this token in the `Authorization: Bearer <token>` header. The token is cleared on logout.
+
+### 2. Trip Management — [`TripService`](src/main/java/ch/uzh/ifi/hase/soprafs26/service/TripService.java) · [`TripController`](src/main/java/ch/uzh/ifi/hase/soprafs26/controller/TripController.java)
+
+The `Trip` is the central aggregate of the application. A user creates a trip (becoming its admin), and other users join via a unique invite URL. Every other feature (bucket list, timeline, tasks) is attached to a trip. The service grants read or modifications access to only trip members.
+
+### 3. Idea Bucket — [`BucketItemService`](src/main/java/ch/uzh/ifi/hase/soprafs26/service/BucketItemService.java) · [`BucketItemController`](src/main/java/ch/uzh/ifi/hase/soprafs26/controller/BucketItemController.java)
+
+Trip members add activity ideas (with optional location coordinates) to a shared bucket list. Ideas can be upvoted/downvoted by members to surface the most popular ones. A bucket item keeps its entry in the list even after it has been promoted to a scheduled activity.
+
+### 4. Activity Timeline — [`ActivityService`](src/main/java/ch/uzh/ifi/hase/soprafs26/service/ActivityService.java) · [`ActivityController`](src/main/java/ch/uzh/ifi/hase/soprafs26/controller/ActivityController.java)
+
+Members schedule confirmed activities on the trip's timeline by picking a bucket item and assigning a date and time slot. The timeline endpoint returns activities sorted chronologically and annotates each entry with its duration, the gap to the next activity on the same day, and the estimated driving time to the next venue.
+
+### 5. Travel Time — [`TravelTimeService`](src/main/java/ch/uzh/ifi/hase/soprafs26/service/TravelTimeService.java)
+
+A thin wrapper around the Google Maps Routes API. Given two sets of coordinates it returns the estimated driving time in minutes. If the API key is absent the field is simply absent from the response, so the rest of the application works without it.
+
+---
+
+## Launch & Deployment
+
+### Prerequisites
+
+- Java 17 (set `JAVA_HOME` on Windows)
+- A Google Maps API key for travel-time estimates
+
+### Clone the repository
+
+```bash
+git clone https://github.com/tunaozdemir99/sopra-fs26-group-29-server.git
+cd sopra-fs26-group-29-server
+```
+
+### Configure the Google Maps API key (optional)
+
+Create a file `local.properties` in the project root (it is git-ignored):
+
+```properties
+GOOGLE_MAPS_API_KEY=your_key_here
+```
+
+If the file is absent the travel-time feature is silently disabled.
 
 ### Build
 
 ```bash
-./gradlew build
+./gradlew build        # macOS / Linux
+gradlew.bat build      # Windows
 ```
 
-### Run
+### Run locally
 
 ```bash
 ./gradlew bootRun
 ```
 
-You can verify that the server is running by visiting `localhost:8080` in your browser.
+The server starts on `http://localhost:8080`.  
+The H2 console is available at `http://localhost:8080/h2-console` (JDBC URL: `jdbc:h2:mem:testdb`, user: `sa`, no password).
 
-### Test
+### Development mode (auto-reload)
+
+Open two terminals:
+
+```bash
+# Terminal 1 — continuous build (skip tests for speed)
+./gradlew build --continuous -xtest
+
+# Terminal 2 — run
+./gradlew bootRun
+```
+
+### Run the tests
 
 ```bash
 ./gradlew test
 ```
 
-### Development Mode
-You can start the backend in development mode, this will automatically trigger a new build and reload the application
-once the content of a file has been changed.
+A JaCoCo HTML report is generated at `build/reports/jacoco/test/html/index.html`.
 
-Start two terminal windows and run:
+### API exploration
 
-`./gradlew build --continuous`
+Import the collection into [Postman](https://www.postman.com/) or use any HTTP client. All protected endpoints expect:
 
-and in the other one:
+```
+Authorization: Bearer <token>
+Content-Type: application/json
+```
 
-`./gradlew bootRun`
+### Deployment
 
-If you want to avoid running all tests with every change, use the following command instead:
+The project ships with a `Dockerfile` (multi-stage build) and an `app.yaml` for Google App Engine.
 
-`./gradlew build --continuous -xtest`
+**Docker**
 
-## API Endpoint Testing with Postman
-We recommend using [Postman](https://www.getpostman.com) to test your API Endpoints.
+```bash
+docker build -t triptogether-server .
+docker run -p 8080:8080 -e GOOGLE_MAPS_API_KEY=your_key triptogether-server
+```
 
-## Debugging
-If something is not working and/or you don't know what is going on. We recommend using a debugger and step-through the process step-by-step.
+**Google App Engine**
 
-To configure a debugger for SpringBoot's Tomcat servlet (i.e. the process you start with `./gradlew bootRun` command), do the following:
+1. Install the [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) and authenticate.
+2. Set your project: `gcloud config set project YOUR_PROJECT_ID`
+3. Edit `app.yaml` and replace the `GOOGLE_MAPS_API_KEY` placeholder with your key.
+4. Deploy: `gcloud app deploy`
 
-1. Open Tab: **Run**/Edit Configurations
-2. Add a new Remote Configuration and name it properly
-3. Start the Server in Debug mode: `./gradlew bootRun --debug-jvm`
-4. Press `Shift + F9` or the use **Run**/Debug "Name of your task"
-5. Set breakpoints in the application where you need it
-6. Step through the process one step at a time
+**CI/CD** — Every push to `main` triggers the GitHub Actions workflow that builds the Docker image, pushes it to Docker Hub, and deploys to Google App Engine automatically.
 
-## Testing
-Have a look here: https://www.baeldung.com/spring-boot-testing
+---
 
-<br>
-<br>
-<br>
+## Roadmap
 
-## Docker
+The following features would be valuable additions for new contributors:
 
-### Introduction
-This year Docker will be used to ease the process of deployment.\
-Docker is a tool that uses containers as isolated environments, ensuring that the application runs consistently and uniformly across different devices.\
-Everything in this repository is already set up to minimize your effort for deployment.\
-All changes to the main branch will automatically be pushed to dockerhub and optimized for production.
+1. **Push notifications for trip events** — Members currently have no way to be alerted when someone joins the trip, adds a bucket item, or schedules an activity. Integrating Firebase Cloud Messaging (or a similar push service) and storing device tokens per user would enable real-time notifications.
 
-### Setup
-1. **One** member of the team should create an account on [dockerhub](https://hub.docker.com/), _incorporating the group number into the account name_, for example, `SoPra_group_XX`.\
-2. This account then creates a repository on dockerhub with the _same name as the group's Github repository name_.\
-3. Finally, the person's account details need to be added as [secrets](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-a-repository) to the group's repository:
-    - dockerhub_username (the username of the dockerhub account from step 1, for example, `SoPra_group_XX`)
-    - dockerhub_password (a generated PAT([personal access token](https://docs.docker.com/docker-hub/access-tokens/)) of the account with read and write access)
-    - dockerhub_repo_name (the name of the dockerhub repository from step 2)
+2. **Persistent production database** — The application currently relies on an H2 in-memory database which is reset on every restart. Migrating to PostgreSQL (and adding Flyway or Liquibase for schema migrations) would make the deployed application production-ready and allow data to survive redeploys.
 
-### Pull and run
-Once the image is created and has been successfully pushed to dockerhub, the image can be run on any machine.\
-Ensure that [Docker](https://www.docker.com/) is installed on the machine you wish to run the container.\
-First, pull (download) the image with the following command, replacing your username and repository name accordingly.
+---
 
-```docker pull <dockerhub_username>/<dockerhub_repo_name>```
+## Authors and Acknowledgment
 
-Then, run the image in a container with the following command, again replacing _<dockerhub_username>_ and _<dockerhub_repo_name>_ accordingly.
+| Name | GitHub |
+|---|---|
+| Adnana Ivana     | [@adnana24](https://github.com/adnana24) |
+| Doğa Mentese     | [@dogamentese](https://github.com/dogamentese) |
+| Emmanuel Oyelana | [@eoyelana](https://github.com/eoyelana) |
+| Tuna Özdemir | [@tunaozdemir99](https://github.com/tunaozdemir99) |
+| Stella Xiao | [@stella-sy-x](https://github.com/stella-sy-x) |
 
-```docker run -p 3000:3000 <dockerhub_username>/<dockerhub_repo_name>```
+
+We would like to thank our teaching assistant and the SoPra FS26 course team at the University of Zurich for their guidance throughout the project.
+
+---
+
+## License
+
+This project is licensed under the [Apache License 2.0](LICENSE).
