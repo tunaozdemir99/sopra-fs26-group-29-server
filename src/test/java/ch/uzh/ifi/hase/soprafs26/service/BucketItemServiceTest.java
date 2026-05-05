@@ -19,6 +19,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -121,6 +122,30 @@ public class BucketItemServiceTest {
         List<BucketItemGetDTO> result = bucketItemService.getBucketItems(1L, "valid-token");
 
         assertTrue(result.get(0).isScheduled());
+    }
+
+    @Test
+    public void getBucketItems_returnsCreatedAt() {
+        Instant now = Instant.now();
+        testItem.setCreatedAt(now);
+        Mockito.when(bucketItemRepository.findByBucketTrip_TripId(1L))
+                .thenReturn(Collections.singletonList(testItem));
+
+        List<BucketItemGetDTO> result = bucketItemService.getBucketItems(1L, "valid-token");
+
+        assertNotNull(result.get(0).getCreatedAt());
+    }
+
+    @Test
+    public void getBucketItems_createdAtMatchesEntity() {
+        Instant now = Instant.now();
+        testItem.setCreatedAt(now);
+        Mockito.when(bucketItemRepository.findByBucketTrip_TripId(1L))
+                .thenReturn(Collections.singletonList(testItem));
+
+        List<BucketItemGetDTO> result = bucketItemService.getBucketItems(1L, "valid-token");
+
+        assertEquals(now, result.get(0).getCreatedAt());
     }
 
     // --- addBucketItem ---
@@ -408,6 +433,22 @@ public class BucketItemServiceTest {
         BucketItemGetDTO result = bucketItemService.vote(1L, 10L, 1, "valid-token");
 
         assertEquals(1, result.getVoteScore()); // +1 +1 -1 = 1
+    }
+
+    @Test
+    public void vote_sameValueTwice_doesNotCreateDuplicate() {
+        Vote existing = new Vote();
+        existing.setValue(1);
+        Mockito.when(voteRepository.findByBucketItem_BucketItemIdAndUser_Id(10L, 1L))
+                .thenReturn(Optional.of(existing));
+        Mockito.when(voteRepository.findByBucketItem_BucketItemId(10L))
+                .thenReturn(List.of(existing));
+        Mockito.when(bucketItemRepository.save(any())).thenReturn(testItem);
+
+        bucketItemService.vote(1L, 10L, 1, "valid-token");
+
+        Mockito.verify(voteRepository).save(existing);
+        Mockito.verify(voteRepository, Mockito.times(1)).save(any(Vote.class));
     }
 
     @Test
