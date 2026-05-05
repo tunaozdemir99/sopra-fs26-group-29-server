@@ -2,6 +2,7 @@ package ch.uzh.ifi.hase.soprafs26.controller;
 
 import ch.uzh.ifi.hase.soprafs26.entity.Trip;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.JoinTripRequestDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TripPostDTO;
 import ch.uzh.ifi.hase.soprafs26.service.TripService;
 
@@ -142,6 +143,145 @@ public class TripControllerTest {
 
         mockMvc.perform(getRequest)
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    public void getTripByInviteCode_validCode_returnsTrip() throws Exception {
+        User admin = new User();
+        admin.setId(1L);
+        admin.setUsername("alice");
+
+        Trip trip = new Trip();
+        trip.setTripId(1L);
+        trip.setTitle("Rome 2026");
+        trip.setStartDate(LocalDate.of(2026, 9, 1));
+        trip.setEndDate(LocalDate.of(2026, 9, 10));
+        trip.setCreatedAt(LocalDateTime.of(2026, 6, 15, 10, 0));
+        trip.setInviteUrl("invite-abc");
+        trip.setAdmin(admin);
+
+        given(tripService.getTripByInviteCode(Mockito.eq("invite-abc"), Mockito.anyString()))
+                .willReturn(trip);
+
+        MockHttpServletRequestBuilder getRequest = get("/trips/invite/invite-abc")
+                .header("Authorization", "Bearer valid-token");
+
+        mockMvc.perform(getRequest)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tripId", is(1)))
+                .andExpect(jsonPath("$.title", is("Rome 2026")))
+                .andExpect(jsonPath("$.inviteUrl", is("invite-abc")));
+    }
+
+    @Test
+    public void getTripByInviteCode_invalidCode_returnsNotFound() throws Exception {
+        given(tripService.getTripByInviteCode(Mockito.anyString(), Mockito.anyString()))
+                .willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid or expired invite link"));
+
+        MockHttpServletRequestBuilder getRequest = get("/trips/invite/bad-code")
+                .header("Authorization", "Bearer valid-token");
+
+        mockMvc.perform(getRequest)
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void joinTrip_newMember_returnsSuccessMessage() throws Exception {
+        User admin = new User();
+        admin.setId(1L);
+        admin.setUsername("alice");
+
+        Trip trip = new Trip();
+        trip.setTripId(1L);
+        trip.setTitle("Rome 2026");
+        trip.setStartDate(LocalDate.of(2026, 9, 1));
+        trip.setEndDate(LocalDate.of(2026, 9, 10));
+        trip.setInviteUrl("invite-abc");
+        trip.setAdmin(admin);
+
+        TripService.JoinResult joinResult = new TripService.JoinResult(trip, false);
+        given(tripService.joinTripByInviteCode(Mockito.eq("invite-abc"), Mockito.anyString()))
+                .willReturn(joinResult);
+
+        JoinTripRequestDTO requestDTO = new JoinTripRequestDTO();
+        requestDTO.setInviteCode("invite-abc");
+
+        MockHttpServletRequestBuilder postRequest = post("/trips/join")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer valid-token")
+                .content(asJsonString(requestDTO));
+
+        mockMvc.perform(postRequest)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tripId", is(1)))
+                .andExpect(jsonPath("$.alreadyMember", is(false)))
+                .andExpect(jsonPath("$.message", is("Successfully joined the trip")));
+    }
+
+    @Test
+    public void joinTrip_alreadyMember_returnsAlreadyMemberMessage() throws Exception {
+        User admin = new User();
+        admin.setId(1L);
+        admin.setUsername("alice");
+
+        Trip trip = new Trip();
+        trip.setTripId(1L);
+        trip.setTitle("Rome 2026");
+        trip.setStartDate(LocalDate.of(2026, 9, 1));
+        trip.setEndDate(LocalDate.of(2026, 9, 10));
+        trip.setInviteUrl("invite-abc");
+        trip.setAdmin(admin);
+
+        TripService.JoinResult joinResult = new TripService.JoinResult(trip, true);
+        given(tripService.joinTripByInviteCode(Mockito.eq("invite-abc"), Mockito.anyString()))
+                .willReturn(joinResult);
+
+        JoinTripRequestDTO requestDTO = new JoinTripRequestDTO();
+        requestDTO.setInviteCode("invite-abc");
+
+        MockHttpServletRequestBuilder postRequest = post("/trips/join")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer valid-token")
+                .content(asJsonString(requestDTO));
+
+        mockMvc.perform(postRequest)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.alreadyMember", is(true)))
+                .andExpect(jsonPath("$.message", is("You are already a member of this trip")));
+    }
+
+    @Test
+    public void joinTrip_invalidCode_returnsNotFound() throws Exception {
+        given(tripService.joinTripByInviteCode(Mockito.anyString(), Mockito.anyString()))
+                .willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid or expired invite link"));
+
+        JoinTripRequestDTO requestDTO = new JoinTripRequestDTO();
+        requestDTO.setInviteCode("bad-code");
+
+        MockHttpServletRequestBuilder postRequest = post("/trips/join")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer valid-token")
+                .content(asJsonString(requestDTO));
+
+        mockMvc.perform(postRequest)
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void joinTrip_invalidToken_returnsUnauthorized() throws Exception {
+        given(tripService.joinTripByInviteCode(Mockito.anyString(), Mockito.anyString()))
+                .willThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or missing token"));
+
+        JoinTripRequestDTO requestDTO = new JoinTripRequestDTO();
+        requestDTO.setInviteCode("invite-abc");
+
+        MockHttpServletRequestBuilder postRequest = post("/trips/join")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer bad-token")
+                .content(asJsonString(requestDTO));
+
+        mockMvc.perform(postRequest)
+                .andExpect(status().isUnauthorized());
     }
 
     private String asJsonString(final Object object) {

@@ -1,6 +1,8 @@
 package ch.uzh.ifi.hase.soprafs26.controller;
 
 import ch.uzh.ifi.hase.soprafs26.entity.Trip;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.JoinTripRequestDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.JoinTripResponseDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TripGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TripPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
@@ -82,5 +84,39 @@ public class TripController {
         return trip.getMembers().stream()
                 .map(DTOMapper.INSTANCE::convertEntityToUserGetDTO)
                 .collect(Collectors.toList());
+    }
+
+    @GetMapping("/trips/invite/{inviteCode}")
+    @ResponseStatus(HttpStatus.OK)
+    public TripGetDTO getTripByInviteCode(
+            @PathVariable String inviteCode,
+            @RequestHeader("Authorization") String token) {
+        String rawToken = token.replace("Bearer ", "");
+        Trip trip = tripService.getTripByInviteCode(inviteCode, rawToken);
+        return DTOMapper.INSTANCE.convertEntityToTripGetDTO(trip);
+    }
+
+    @PostMapping("/trips/join")
+    @ResponseStatus(HttpStatus.OK)
+    public JoinTripResponseDTO joinTrip(
+            @RequestBody JoinTripRequestDTO requestDTO,
+            @RequestHeader("Authorization") String token) {
+        String rawToken = token.replace("Bearer ", "");
+        TripService.JoinResult result = tripService.joinTripByInviteCode(requestDTO.getInviteCode(), rawToken);
+
+        Trip trip = result.trip;
+        JoinTripResponseDTO response = new JoinTripResponseDTO();
+        response.setTripId(trip.getTripId());
+        response.setTitle(trip.getTitle());
+        response.setLocation(trip.getLocation());
+        response.setStartDate(trip.getStartDate());
+        response.setEndDate(trip.getEndDate());
+        response.setAdminUsername(trip.getAdmin().getUsername());
+        response.setInviteUrl(trip.getInviteUrl());
+        response.setAlreadyMember(result.alreadyMember);
+        response.setMessage(result.alreadyMember
+                ? "You are already a member of this trip"
+                : "Successfully joined the trip");
+        return response;
     }
 }

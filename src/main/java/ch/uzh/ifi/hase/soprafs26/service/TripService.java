@@ -75,26 +75,69 @@ public class TripService {
     }
 
     public Trip getTripById(Long tripId, String token) {
-        // authenticate user
         User user = userRepository.findByToken(token);
         if (user == null) {
             throw new ResponseStatusException(
                     HttpStatus.UNAUTHORIZED, "Invalid or missing token");
         }
 
-        // find trip
         Trip trip = tripRepository.findById(tripId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Trip not found"));
 
-        // authorization: only trip members can access
-        // TODO: extend to all trip members once Member entity is implemented (S5)
-        if (!trip.getAdmin().getId().equals(user.getId())) {
+        boolean isMember = trip.getMembers().stream()
+                .anyMatch(m -> m.getId().equals(user.getId()));
+        if (!isMember) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN, "User is not a member of this trip");
         }
 
         return trip;
+    }
+
+    public Trip getTripByInviteCode(String inviteCode, String token) {
+        User user = userRepository.findByToken(token);
+        if (user == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED, "Invalid or missing token");
+        }
+
+        return tripRepository.findByInviteUrl(inviteCode)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Invalid or expired invite link"));
+    }
+
+    public JoinResult joinTripByInviteCode(String inviteCode, String token) {
+        User user = userRepository.findByToken(token);
+        if (user == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED, "Invalid or missing token");
+        }
+
+        Trip trip = tripRepository.findByInviteUrl(inviteCode)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Invalid or expired invite link"));
+
+        boolean alreadyMember = trip.getMembers().stream()
+                .anyMatch(m -> m.getId().equals(user.getId()));
+
+        if (!alreadyMember) {
+            trip.addMember(user);
+            tripRepository.save(trip);
+            tripRepository.flush();
+        }
+
+        return new JoinResult(trip, alreadyMember);
+    }
+
+    public static class JoinResult {
+        public final Trip trip;
+        public final boolean alreadyMember;
+
+        public JoinResult(Trip trip, boolean alreadyMember) {
+            this.trip = trip;
+            this.alreadyMember = alreadyMember;
+        }
     }
 
     public List<Trip> getTripsByUser(Long userId, String token) {
