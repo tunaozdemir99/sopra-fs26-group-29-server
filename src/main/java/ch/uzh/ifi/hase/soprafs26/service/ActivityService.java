@@ -118,6 +118,7 @@ public class ActivityService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a member of this trip");
         }
         validateActivityTimes(activityPostDTO.getDate(), activityPostDTO.getStartTime(), activityPostDTO.getEndTime());
+        validateActivityDateInRange(activityPostDTO.getDate(), trip);
 
         Activity activity = new Activity();
         activity.setDate(activityPostDTO.getDate());
@@ -173,6 +174,7 @@ public class ActivityService {
         }
 
         validateActivityTimes(activityPutDTO.getDate(), activityPutDTO.getStartTime(), activityPutDTO.getEndTime());
+        validateActivityDateInRange(activityPutDTO.getDate(), trip);
 
         if (activityPutDTO.getLatitude() == null || activityPutDTO.getLongitude() == null
                 || activityPutDTO.getLocationName() == null || activityPutDTO.getLocationName().isBlank()) {
@@ -209,6 +211,13 @@ public class ActivityService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Activity does not belong to this trip");
         }
         activityRepository.delete(activity);
+    }
+
+    private void validateActivityDateInRange(LocalDate date, Trip trip) {
+        if (date.isBefore(trip.getStartDate()) || date.isAfter(trip.getEndDate())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "Activity date must be within the trip's date range");
+        }
     }
 
     private void validateActivityTimes(LocalDate date, LocalTime startTime, LocalTime endTime) {
