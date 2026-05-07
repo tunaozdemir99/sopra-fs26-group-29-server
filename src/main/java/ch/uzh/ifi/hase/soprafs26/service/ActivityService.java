@@ -179,6 +179,11 @@ public class ActivityService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Location is required");
         }
 
+        if (activityPutDTO.getName() == null || activityPutDTO.getName().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Activity name is required");
+        }
+        
+        activity.setName(activityPutDTO.getName());
         activity.setDate(activityPutDTO.getDate());
         activity.setStartTime(activityPutDTO.getStartTime());
         activity.setEndTime(activityPutDTO.getEndTime());
