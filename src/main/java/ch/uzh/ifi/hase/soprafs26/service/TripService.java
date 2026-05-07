@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -56,6 +57,12 @@ public class TripService {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Start date and end date are required");
         }
+
+        if (newTrip.getStartDate().isBefore(LocalDate.now())) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST, "Start date cannot be in the past");
+        }
+
         if (newTrip.getEndDate().isBefore(newTrip.getStartDate())) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "End date cannot be before start date");
