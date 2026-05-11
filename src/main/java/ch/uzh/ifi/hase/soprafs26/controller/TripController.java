@@ -61,6 +61,16 @@ public class TripController {
         return DTOMapper.INSTANCE.convertEntityToTripGetDTO(trip);
     }
 
+    @DeleteMapping("/trips/{tripId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteTrip(
+            @PathVariable Long tripId,
+            @RequestHeader("Authorization") String token) {
+
+        String rawToken = token.replace("Bearer ", "");
+        tripService.deleteTrip(tripId, rawToken);
+    }
+
     @GetMapping("/users/{userId}/trips")
     @ResponseStatus(HttpStatus.OK)
     public List<TripGetDTO> getTripsForUser(
