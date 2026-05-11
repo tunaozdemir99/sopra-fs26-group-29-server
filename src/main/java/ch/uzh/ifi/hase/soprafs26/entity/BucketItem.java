@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import java.io.Serializable;
 import java.time.Instant;
 import org.hibernate.annotations.CreationTimestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -55,7 +57,11 @@ public class BucketItem implements Serializable {
     private Trip bucketTrip;
 
     @Column(nullable = false)
-    private int voteScore = 0;  
+    private int voteScore = 0;
+
+    // cascade delete
+    @OneToMany(mappedBy = "bucketItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Vote> votes = new ArrayList<>();
 
     // getters & setters
     public Long getBucketItemId() {

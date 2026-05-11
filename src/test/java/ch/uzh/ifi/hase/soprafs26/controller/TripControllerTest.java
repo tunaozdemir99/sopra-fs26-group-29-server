@@ -27,6 +27,7 @@ import static org.hamcrest.Matchers.is;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -103,6 +104,25 @@ public class TripControllerTest {
 
         mockMvc.perform(postRequest)
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void deleteTrip_validAdmin_returns204() throws Exception {
+        mockMvc.perform(delete("/trips/1")
+                        .header("Authorization", "Bearer valid-token"))
+                .andExpect(status().isNoContent());
+
+        Mockito.verify(tripService, Mockito.times(1)).deleteTrip(Mockito.eq(1L), Mockito.anyString());
+    }
+
+    @Test
+    public void deleteTrip_notAdmin_returns403() throws Exception {
+        Mockito.doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Not admin"))
+                .when(tripService).deleteTrip(Mockito.anyLong(), Mockito.anyString());
+
+        mockMvc.perform(delete("/trips/1")
+                        .header("Authorization", "Bearer some-token"))
+                .andExpect(status().isForbidden());
     }
 
     @Test

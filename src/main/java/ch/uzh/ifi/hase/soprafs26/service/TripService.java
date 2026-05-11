@@ -102,6 +102,30 @@ public class TripService {
         return trip;
     }
 
+    public void deleteTrip(Long tripId, String token) {
+        User user = userRepository.findByToken(token);
+        if (user == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED, "Invalid or missing token");
+        }
+
+        Trip trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Trip not found"));
+
+        // only admin can delete
+        if (!trip.getAdmin().getId().equals(user.getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Only the trip admin can delete this trip");
+        }
+
+        // clear the members join table before deleting
+        trip.getMembers().clear();
+
+        tripRepository.delete(trip);
+        tripRepository.flush();
+    }
+
     public Trip getTripByInviteCode(String inviteCode, String token) {
         User user = userRepository.findByToken(token);
         if (user == null) {
