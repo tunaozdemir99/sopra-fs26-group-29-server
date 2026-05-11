@@ -64,6 +64,7 @@ public interface DTOMapper {
     @Mapping(source = "createdAt", target = "createdAt")
     @Mapping(source = "inviteUrl", target = "inviteUrl")
     @Mapping(source = "admin.username", target = "adminUsername")
+    @Mapping(source = "admin.id", target = "adminId")
     TripGetDTO convertEntityToTripGetDTO(Trip trip);
 
     // Pin mappings
