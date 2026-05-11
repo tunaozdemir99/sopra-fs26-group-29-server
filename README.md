@@ -158,13 +158,13 @@ The following features would be valuable additions for new contributors:
 
 ## Authors and Acknowledgment
 
-| Name | GitHub |
-|---|---|
+| Name             | GitHub |
+|------------------|---|
 | Adnana Ivana     | [@adnana24](https://github.com/adnana24) |
 | Doğa Mentese     | [@dogamentese](https://github.com/dogamentese) |
 | Emmanuel Oyelana | [@eoyelana](https://github.com/eoyelana) |
-| Tuna Özdemir | [@tunaozdemir99](https://github.com/tunaozdemir99) |
-| Stella Xiao | [@stella-sy-x](https://github.com/stella-sy-x) |
+| Tuna Özdemir     | [@tunaozdemir99](https://github.com/tunaozdemir99) |
+| Shiyu Xiao       | [@stella-sy-x](https://github.com/stella-sy-x) |
 
 
 We would like to thank our teaching assistant and the SoPra FS26 course team at the University of Zurich for their guidance throughout the project.
