@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -96,6 +97,48 @@ public class TripServiceTest {
 
         assertThrows(ResponseStatusException.class,
                 () -> tripService.createTrip(input, "valid-token"));
+    }
+
+    @Test
+    public void deleteTrip_validAdmin_success() {
+        testTrip.setAdmin(testUser);
+        testTrip.setMembers(new HashSet<>());
+        Mockito.when(tripRepository.findById(1L)).thenReturn(Optional.of(testTrip));
+
+        assertDoesNotThrow(() -> tripService.deleteTrip(1L, "valid-token"));
+        Mockito.verify(tripRepository, Mockito.times(1)).delete(testTrip);
+    }
+
+    @Test
+    public void deleteTrip_notAdmin_throwsForbidden() {
+        User otherUser = new User();
+        otherUser.setId(2L);
+        otherUser.setUsername("bob");
+        testTrip.setAdmin(otherUser);
+
+        Mockito.when(tripRepository.findById(1L)).thenReturn(Optional.of(testTrip));
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> tripService.deleteTrip(1L, "valid-token"));
+        assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
+    }
+
+    @Test
+    public void deleteTrip_invalidToken_throwsUnauthorized() {
+        Mockito.when(userRepository.findByToken("bad-token")).thenReturn(null);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> tripService.deleteTrip(1L, "bad-token"));
+        assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
+    }
+
+    @Test
+    public void deleteTrip_tripNotFound_throwsNotFound() {
+        Mockito.when(tripRepository.findById(99L)).thenReturn(Optional.empty());
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> tripService.deleteTrip(99L, "valid-token"));
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
     }
 
     @Test
