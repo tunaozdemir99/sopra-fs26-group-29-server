@@ -346,8 +346,10 @@ public class ActivityServiceTest {
     }
 
     @Test
-    public void scheduleFromBucket_locationNameProvided_overridesBucketItemLocation() {
+    public void scheduleFromBucket_locationWithCoordinates_overridesBucketItemLocation() {
         testBucketItem.setLocation("Old Location");
+        testBucketItem.setLatitude(48.8584);
+        testBucketItem.setLongitude(2.2945);
         Mockito.when(activityRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         ActivityPostDTO dto = new ActivityPostDTO();
@@ -356,10 +358,47 @@ public class ActivityServiceTest {
         dto.setStartTime(LocalTime.of(9, 0));
         dto.setEndTime(LocalTime.of(11, 0));
         dto.setLocationName("Custom Location");
+        dto.setLatitude(47.3769);
+        dto.setLongitude(8.5417);
 
         Activity result = activityService.scheduleFromBucket(1L, dto, "valid-token");
 
         assertEquals("Custom Location", result.getLocationName());
+        assertEquals(47.3769, result.getLatitude());
+        assertEquals(8.5417, result.getLongitude());
+    }
+
+    @Test
+    public void scheduleFromBucket_locationNameWithoutCoordinates_throwsBadRequest() {
+        testBucketItem.setLocation("Old Location");
+
+        ActivityPostDTO dto = new ActivityPostDTO();
+        dto.setBucketItemId(10L);
+        dto.setDate(LocalDate.of(2026, 8, 1));
+        dto.setStartTime(LocalTime.of(9, 0));
+        dto.setEndTime(LocalTime.of(11, 0));
+        dto.setLocationName("New Place");
+        // latitude and longitude intentionally omitted (null) — simulates unresolved geocoding
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> activityService.scheduleFromBucket(1L, dto, "valid-token"));
+        assertEquals(org.springframework.http.HttpStatus.BAD_REQUEST, ex.getStatusCode());
+    }
+
+    @Test
+    public void scheduleFromBucket_coordinatesWithoutLocationName_throwsBadRequest() {
+        ActivityPostDTO dto = new ActivityPostDTO();
+        dto.setBucketItemId(10L);
+        dto.setDate(LocalDate.of(2026, 8, 1));
+        dto.setStartTime(LocalTime.of(9, 0));
+        dto.setEndTime(LocalTime.of(11, 0));
+        dto.setLatitude(47.3769);
+        dto.setLongitude(8.5417);
+        // locationName intentionally omitted
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> activityService.scheduleFromBucket(1L, dto, "valid-token"));
+        assertEquals(org.springframework.http.HttpStatus.BAD_REQUEST, ex.getStatusCode());
     }
 
     @Test

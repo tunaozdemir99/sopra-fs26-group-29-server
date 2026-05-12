@@ -134,9 +134,22 @@ public class ActivityService {
             activity.setName(bucketItem.getName());
             activity.setFromBucketItem(true);
             activity.setBucketItem(bucketItem);
-            activity.setLocationName(activityPostDTO.getLocationName() != null ? activityPostDTO.getLocationName() : bucketItem.getLocation());
-            activity.setLatitude(activityPostDTO.getLatitude() != null ? activityPostDTO.getLatitude() : bucketItem.getLatitude());
-            activity.setLongitude(activityPostDTO.getLongitude() != null ? activityPostDTO.getLongitude() : bucketItem.getLongitude());
+
+            boolean hasCustomName = activityPostDTO.getLocationName() != null && !activityPostDTO.getLocationName().isBlank();
+            boolean hasCoordinates = activityPostDTO.getLatitude() != null && activityPostDTO.getLongitude() != null;
+            if (hasCustomName != hasCoordinates) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Location name and coordinates must be provided together");
+            }
+            if (hasCustomName) {
+                activity.setLocationName(activityPostDTO.getLocationName());
+                activity.setLatitude(activityPostDTO.getLatitude());
+                activity.setLongitude(activityPostDTO.getLongitude());
+            } else {
+                activity.setLocationName(bucketItem.getLocation());
+                activity.setLatitude(bucketItem.getLatitude());
+                activity.setLongitude(bucketItem.getLongitude());
+            }
         } else {
             if (activityPostDTO.getName() == null || activityPostDTO.getName().isBlank()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "name is required when not scheduling from bucket");
