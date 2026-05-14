@@ -84,18 +84,6 @@ public class TripController {
                 .collect(Collectors.toList());
     }
 
-    @GetMapping("/trips/{tripId}/members")
-    @ResponseStatus(HttpStatus.OK)
-    public List<UserGetDTO> getTripMembers(
-            @PathVariable Long tripId,
-            @RequestHeader("Authorization") String token) {
-        String rawToken = token.replace("Bearer ", "");
-        Trip trip = tripService.getTripById(tripId, rawToken);
-        return trip.getMembers().stream()
-                .map(DTOMapper.INSTANCE::convertEntityToUserGetDTO)
-                .collect(Collectors.toList());
-    }
-
     @GetMapping("/trips/invite/{inviteCode}")
     @ResponseStatus(HttpStatus.OK)
     public TripGetDTO getTripByInviteCode(
