@@ -85,6 +85,10 @@ public class MemberService {
 
         // admin can't leave without transferring admin first
         if (isAdmin && isSelf) {
+            if (trip.getMembers().size() == 1) {
+                tripRepository.delete(trip);
+                return;
+            }
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Transfer admin rights before leaving the trip");
         }
