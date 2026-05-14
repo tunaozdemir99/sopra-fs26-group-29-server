@@ -62,4 +62,15 @@ public class MemberController {
         String rawToken = token.replace("Bearer ", "");
         memberService.removeMember(tripId, userId, rawToken);
     }
+
+    @PatchMapping("/trips/{tripId}/members/{userId}")
+    @ResponseStatus(HttpStatus.OK)
+    public void transferAdmin(
+            @PathVariable Long tripId,
+            @PathVariable Long userId,
+            @RequestHeader("Authorization") String token) {
+
+        String rawToken = token.replace("Bearer ", "");
+        memberService.transferAdmin(tripId, userId, rawToken);
+    }
 }

@@ -94,6 +94,29 @@ public class MemberService {
         tripRepository.flush();
     }
 
+    public void transferAdmin(Long tripId, Long targetUserId, String token) {
+        User admin = authenticateAndAuthorize(tripId, token);
+        Trip trip = findTripOrThrow(tripId);
+
+        if (admin.getId().equals(targetUserId)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "You are already the admin");
+        }
+
+        User target = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "User not found"));
+
+        if (!trip.getMembers().contains(target)) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "User is not a member of this trip");
+        }
+
+        trip.setAdmin(target);
+        tripRepository.save(trip);
+        tripRepository.flush();
+    }
+
     // --- helper methods ---
 
     private Trip findTripOrThrow(Long tripId) {
