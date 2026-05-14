@@ -117,4 +117,28 @@ public class TripController {
                 : "Successfully joined the trip");
         return response;
     }
+
+    @GetMapping("/trips/{tripId}/invite")
+    @ResponseStatus(HttpStatus.OK)
+    public java.util.Map<String, String> getInviteUrl(
+            @PathVariable Long tripId,
+            @RequestHeader("Authorization") String token) {
+
+        String rawToken = token.replace("Bearer ", "");
+        String inviteUrl = tripService.getInviteUrl(tripId, rawToken);
+
+        return java.util.Map.of("inviteUrl", inviteUrl);
+    }
+
+    @PutMapping("/trips/{tripId}/invite")
+    @ResponseStatus(HttpStatus.OK)
+    public java.util.Map<String, String> regenerateInviteUrl(
+            @PathVariable Long tripId,
+            @RequestHeader("Authorization") String token) {
+
+        String rawToken = token.replace("Bearer ", "");
+        String inviteUrl = tripService.regenerateInviteUrl(tripId, rawToken);
+
+        return java.util.Map.of("inviteUrl", inviteUrl);
+    }
 }

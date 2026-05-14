@@ -46,6 +46,9 @@ public class Trip implements Serializable {
     @Column(nullable = false, unique = true)
     private String inviteUrl;
 
+    @Column(nullable = false)
+    private boolean inviteActive = true;
+
     // the user who created (and currently admins) this trip
     @ManyToOne
     @JoinColumn(name = "admin_id", nullable = false)
@@ -127,6 +130,14 @@ public class Trip implements Serializable {
 
     public void setInviteUrl(String inviteUrl) {
         this.inviteUrl = inviteUrl;
+    }
+
+    public boolean isInviteActive() {
+        return inviteActive;
+    }
+
+    public void setInviteActive(boolean inviteActive) {
+        this.inviteActive = inviteActive;
     }
 
     public User getAdmin() {
