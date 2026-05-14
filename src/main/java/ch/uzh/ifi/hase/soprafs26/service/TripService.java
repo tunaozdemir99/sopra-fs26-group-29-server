@@ -147,7 +147,12 @@ public class TripService {
 
         Trip trip = tripRepository.findByInviteUrl(inviteCode)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Invalid or expired invite link"));
+                        HttpStatus.NOT_FOUND, "Trip not found"));
+
+        if (!trip.isInviteActive()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Invite link has been deactivated");
+        }
 
         boolean alreadyMember = trip.getMembers().stream()
                 .anyMatch(m -> m.getId().equals(user.getId()));
@@ -180,5 +185,68 @@ public class TripService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only view your own trips");
         }
         return tripRepository.findByMembers_Id(userId);
+    }
+
+    public String getInviteUrl(Long tripId, String token) {
+        User user = userRepository.findByToken(token);
+        if (user == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED, "Invalid or missing token");
+        }
+
+        Trip trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Trip not found"));
+
+        if (!trip.getAdmin().getId().equals(user.getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Only admin can view the invite link");
+        }
+
+        return trip.getInviteUrl();
+    }
+
+    public String regenerateInviteUrl(Long tripId, String token) {
+        User user = userRepository.findByToken(token);
+        if (user == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED, "Invalid or missing token");
+        }
+
+        Trip trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Trip not found"));
+
+        if (!trip.getAdmin().getId().equals(user.getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Only admin can regenerate the invite link");
+        }
+
+        trip.setInviteUrl(UUID.randomUUID().toString());
+        tripRepository.save(trip);
+        tripRepository.flush();
+
+        return trip.getInviteUrl();
+    }
+
+    public void setInviteActive(Long tripId, boolean active, String token) {
+        User user = userRepository.findByToken(token);
+        if (user == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED, "Invalid or missing token");
+        }
+
+        Trip trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Trip not found"));
+
+        if (!trip.getAdmin().getId().equals(user.getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Only admin can manage the invite link");
+        }
+
+        trip.setInviteActive(active);
+        tripRepository.save(trip);
+        tripRepository.flush();
     }
 }

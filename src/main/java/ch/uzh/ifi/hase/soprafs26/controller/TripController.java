@@ -84,18 +84,6 @@ public class TripController {
                 .collect(Collectors.toList());
     }
 
-    @GetMapping("/trips/{tripId}/members")
-    @ResponseStatus(HttpStatus.OK)
-    public List<UserGetDTO> getTripMembers(
-            @PathVariable Long tripId,
-            @RequestHeader("Authorization") String token) {
-        String rawToken = token.replace("Bearer ", "");
-        Trip trip = tripService.getTripById(tripId, rawToken);
-        return trip.getMembers().stream()
-                .map(DTOMapper.INSTANCE::convertEntityToUserGetDTO)
-                .collect(Collectors.toList());
-    }
-
     @GetMapping("/trips/invite/{inviteCode}")
     @ResponseStatus(HttpStatus.OK)
     public TripGetDTO getTripByInviteCode(
@@ -128,5 +116,43 @@ public class TripController {
                 ? "You are already a member of this trip"
                 : "Successfully joined the trip");
         return response;
+    }
+
+    @GetMapping("/trips/{tripId}/invite")
+    @ResponseStatus(HttpStatus.OK)
+    public java.util.Map<String, String> getInviteUrl(
+            @PathVariable Long tripId,
+            @RequestHeader("Authorization") String token) {
+
+        String rawToken = token.replace("Bearer ", "");
+        String inviteUrl = tripService.getInviteUrl(tripId, rawToken);
+
+        return java.util.Map.of("inviteUrl", inviteUrl);
+    }
+
+    @PutMapping("/trips/{tripId}/invite")
+    @ResponseStatus(HttpStatus.OK)
+    public java.util.Map<String, String> regenerateInviteUrl(
+            @PathVariable Long tripId,
+            @RequestHeader("Authorization") String token) {
+
+        String rawToken = token.replace("Bearer ", "");
+        String inviteUrl = tripService.regenerateInviteUrl(tripId, rawToken);
+
+        return java.util.Map.of("inviteUrl", inviteUrl);
+    }
+
+    @PatchMapping("/trips/{tripId}/invite")
+    @ResponseStatus(HttpStatus.OK)
+    public java.util.Map<String, Object> toggleInvite(
+            @PathVariable Long tripId,
+            @RequestBody java.util.Map<String, Boolean> body,
+            @RequestHeader("Authorization") String token) {
+
+        String rawToken = token.replace("Bearer ", "");
+        boolean active = body.getOrDefault("active", false);
+        tripService.setInviteActive(tripId, active, rawToken);
+
+        return java.util.Map.of("inviteActive", active);
     }
 }

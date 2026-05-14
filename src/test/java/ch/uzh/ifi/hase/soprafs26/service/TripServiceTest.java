@@ -246,4 +246,62 @@ public class TripServiceTest {
                 () -> tripService.joinTripByInviteCode("invite-abc", "bad-token"));
         assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
     }
+
+    @Test
+    public void getInviteUrl_admin_success() {
+        testTrip.setAdmin(testUser);
+        testTrip.setInviteUrl("abc123");
+        Mockito.when(tripRepository.findById(1L)).thenReturn(Optional.of(testTrip));
+
+        String url = tripService.getInviteUrl(1L, "valid-token");
+
+        assertEquals("abc123", url);
+    }
+
+    @Test
+    public void getInviteUrl_notAdmin_throwsForbidden() {
+        User otherUser = new User();
+        otherUser.setId(2L);
+        testTrip.setAdmin(otherUser);
+        Mockito.when(tripRepository.findById(1L)).thenReturn(Optional.of(testTrip));
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> tripService.getInviteUrl(1L, "valid-token"));
+        assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
+    }
+
+    @Test
+    public void regenerateInviteUrl_admin_success() {
+        testTrip.setAdmin(testUser);
+        testTrip.setInviteUrl("old-url");
+        Mockito.when(tripRepository.findById(1L)).thenReturn(Optional.of(testTrip));
+
+        String newUrl = tripService.regenerateInviteUrl(1L, "valid-token");
+
+        assertNotEquals("old-url", newUrl);
+        assertNotNull(newUrl);
+    }
+
+    @Test
+    public void setInviteActive_admin_success() {
+        testTrip.setAdmin(testUser);
+        testTrip.setInviteActive(true);
+        Mockito.when(tripRepository.findById(1L)).thenReturn(Optional.of(testTrip));
+
+        tripService.setInviteActive(1L, false, "valid-token");
+
+        assertFalse(testTrip.isInviteActive());
+    }
+
+    @Test
+    public void setInviteActive_notAdmin_throwsForbidden() {
+        User otherUser = new User();
+        otherUser.setId(2L);
+        testTrip.setAdmin(otherUser);
+        Mockito.when(tripRepository.findById(1L)).thenReturn(Optional.of(testTrip));
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> tripService.setInviteActive(1L, false, "valid-token"));
+        assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
+    }
 }
