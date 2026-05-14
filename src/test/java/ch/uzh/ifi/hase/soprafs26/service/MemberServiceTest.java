@@ -66,6 +66,8 @@ public class MemberServiceTest {
         Mockito.when(userRepository.findByToken("admin-token")).thenReturn(admin);
         Mockito.when(userRepository.findByToken("member-token")).thenReturn(member);
         Mockito.when(tripRepository.findById(1L)).thenReturn(Optional.of(trip));
+        Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
+        Mockito.when(userRepository.findById(2L)).thenReturn(Optional.of(member));
     }
 
     // --- #118: Add member ---
