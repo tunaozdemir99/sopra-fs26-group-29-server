@@ -141,4 +141,18 @@ public class TripController {
 
         return java.util.Map.of("inviteUrl", inviteUrl);
     }
+
+    @PatchMapping("/trips/{tripId}/invite")
+    @ResponseStatus(HttpStatus.OK)
+    public java.util.Map<String, Object> toggleInvite(
+            @PathVariable Long tripId,
+            @RequestBody java.util.Map<String, Boolean> body,
+            @RequestHeader("Authorization") String token) {
+
+        String rawToken = token.replace("Bearer ", "");
+        boolean active = body.getOrDefault("active", false);
+        tripService.setInviteActive(tripId, active, rawToken);
+
+        return java.util.Map.of("inviteActive", active);
+    }
 }
