@@ -121,5 +121,11 @@ public class UserService {
 	public User getUserById(Long userId) {
 		return userRepository.findById(userId).orElseThrow(() ->
 			new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-	}	
+	}
+
+	public void validateToken(String token) {
+		if (token == null || userRepository.findByToken(token) == null) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or missing token");
+		}
+	}
 }
