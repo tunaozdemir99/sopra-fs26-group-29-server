@@ -56,6 +56,12 @@ public interface DTOMapper {
     @Mapping(source = "endDate", target = "endDate")
     Trip convertTripPostDTOtoEntity(TripPostDTO tripPostDTO);
 
+    @Mapping(source = "title", target = "title")
+    @Mapping(source = "location", target = "location")
+    @Mapping(source = "startDate", target = "startDate")
+    @Mapping(source = "endDate", target = "endDate")
+    Trip convertTripPatchDTOtoEntity(TripPatchDTO tripPatchDTO);
+
     @Mapping(source = "tripId", target = "tripId")
     @Mapping(source = "title", target = "title")
     @Mapping(source = "location", target = "location")

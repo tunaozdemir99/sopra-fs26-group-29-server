@@ -229,6 +229,41 @@ public class TripService {
         return trip.getInviteUrl();
     }
 
+    public Trip updateTrip(Long tripId, String token, Trip updates) {
+        User user = userRepository.findByToken(token);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or missing token");
+        }
+
+        Trip trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trip not found"));
+
+        if (!trip.getAdmin().getId().equals(user.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the trip admin can edit trip details");
+        }
+
+        if (updates.getTitle() != null && !updates.getTitle().isBlank()) {
+            trip.setTitle(updates.getTitle());
+        }
+        if (updates.getLocation() != null) {
+            trip.setLocation(updates.getLocation());
+        }
+
+        LocalDate newStart = updates.getStartDate() != null ? updates.getStartDate() : trip.getStartDate();
+        LocalDate newEnd = updates.getEndDate() != null ? updates.getEndDate() : trip.getEndDate();
+
+        if (newEnd.isBefore(newStart)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End date cannot be before start date");
+        }
+
+        trip.setStartDate(newStart);
+        trip.setEndDate(newEnd);
+
+        tripRepository.save(trip);
+        tripRepository.flush();
+        return trip;
+    }
+
     public void setInviteActive(Long tripId, boolean active, String token) {
         User user = userRepository.findByToken(token);
         if (user == null) {

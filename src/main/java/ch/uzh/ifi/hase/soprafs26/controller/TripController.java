@@ -4,6 +4,7 @@ import ch.uzh.ifi.hase.soprafs26.entity.Trip;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.JoinTripRequestDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.JoinTripResponseDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TripGetDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.TripPatchDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TripPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
@@ -59,6 +60,19 @@ public class TripController {
         Trip trip = tripService.getTripById(tripId, rawToken);
 
         return DTOMapper.INSTANCE.convertEntityToTripGetDTO(trip);
+    }
+
+    @PatchMapping("/trips/{tripId}")
+    @ResponseStatus(HttpStatus.OK)
+    public TripGetDTO updateTrip(
+            @PathVariable Long tripId,
+            @RequestBody TripPatchDTO tripPatchDTO,
+            @RequestHeader("Authorization") String token) {
+
+        String rawToken = token.replace("Bearer ", "");
+        Trip updates = DTOMapper.INSTANCE.convertTripPatchDTOtoEntity(tripPatchDTO);
+        Trip updatedTrip = tripService.updateTrip(tripId, rawToken, updates);
+        return DTOMapper.INSTANCE.convertEntityToTripGetDTO(updatedTrip);
     }
 
     @DeleteMapping("/trips/{tripId}")
