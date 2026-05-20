@@ -34,9 +34,30 @@ public class MemberService {
         this.userRepository = userRepository;
     }
 
-    public Set<User> getMembers(Long tripId) {
-        Trip trip = findTripOrThrow(tripId);
+    public Set<User> getMembers(Long tripId, String token) {
+        User user = userRepository.findByToken(token);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or missing token");
+        }
+        Trip trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trip not found"));
+        if (!trip.getMembers().contains(user)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a member of this trip");
+        }
         return trip.getMembers();
+    }
+
+    public Trip getTripWithAuthCheck(Long tripId, String token) {
+        User user = userRepository.findByToken(token);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or missing token");
+        }
+        Trip trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trip not found"));
+        if (!trip.getMembers().contains(user)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a member of this trip");
+        }
+        return trip;
     }
 
     public User addMember(Long tripId, String username, String token) {
