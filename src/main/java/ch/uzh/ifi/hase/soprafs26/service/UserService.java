@@ -39,7 +39,11 @@ public class UserService {
 	}
 
 	public User createUser(User newUser) {
-		// checks if the username is taken, throws 409 if it is
+		if (newUser.getUsername() == null || newUser.getUsername().isBlank()
+				|| newUser.getPassword() == null || newUser.getPassword().isBlank()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username and password are required");
+		}
+
 		checkIfUserExists(newUser);
 		newUser.setToken(UUID.randomUUID().toString());
 		newUser.setStatus(UserStatus.ONLINE);
@@ -88,11 +92,16 @@ public class UserService {
 	}
 
 	public User updateUser(Long userId, String token, User updates) {
+		User caller = userRepository.findByToken(token);
+		if (caller == null) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or missing token");
+		}
+
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-		if (token == null || !token.equals(user.getToken())) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not authorized");
+		if (!caller.getId().equals(user.getId())) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not authorized to modify this user");
 		}
 
 		if (updates.getBio() != null) user.setBio(updates.getBio());

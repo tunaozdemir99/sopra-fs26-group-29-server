@@ -12,6 +12,8 @@ import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 
+import org.springframework.http.HttpStatus;
+
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -34,6 +36,7 @@ public class UserServiceTest {
 		testUser = new User();
 		testUser.setId(1L);
 		testUser.setUsername("testUsername");
+		testUser.setPassword("testPassword");
 
 		// when -> any object is being save in the userRepository -> return the dummy
 		// testUser
@@ -131,4 +134,65 @@ public class UserServiceTest {
 		assertEquals(testUser.getUsername(), found.getUsername());
 	}
 
+
+    // --- createUser validation ---
+
+    @Test
+    public void createUser_missingUsername_throwsBadRequest() {
+        User noUsername = new User();
+        noUsername.setPassword("pass");
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> userService.createUser(noUsername));
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+    }
+
+    @Test
+    public void createUser_missingPassword_throwsBadRequest() {
+        User noPassword = new User();
+        noPassword.setUsername("alice");
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> userService.createUser(noPassword));
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+    }
+
+    // --- updateUser ---
+
+    @Test
+    public void updateUser_invalidToken_throwsUnauthorized() {
+        Mockito.when(userRepository.findByToken("bad-token")).thenReturn(null);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> userService.updateUser(1L, "bad-token", new User()));
+        assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
+    }
+
+    @Test
+    public void updateUser_wrongOwner_throwsForbidden() {
+        User otherUser = new User();
+        otherUser.setId(99L);
+        otherUser.setToken("other-token");
+        Mockito.when(userRepository.findByToken("other-token")).thenReturn(otherUser);
+        Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> userService.updateUser(1L, "other-token", new User()));
+        assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
+    }
+
+    @Test
+    public void updateUser_validInput_success() {
+        testUser.setToken("valid-token");
+        Mockito.when(userRepository.findByToken("valid-token")).thenReturn(testUser);
+        Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+
+        User updates = new User();
+        updates.setBio("New bio");
+
+        User updated = userService.updateUser(1L, "valid-token", updates);
+
+        assertEquals("New bio", updated.getBio());
+        Mockito.verify(userRepository, Mockito.times(1)).save(testUser);
+    }
 }
