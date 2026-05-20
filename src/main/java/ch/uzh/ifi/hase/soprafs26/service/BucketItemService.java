@@ -149,6 +149,10 @@ public class BucketItemService {
         if (!trip.getMembers().contains(user))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a member of this trip");
 
+        if (value != -1 && value != 0 && value != 1) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vote value must be -1, 0, or 1");
+        }
+
         BucketItem item = bucketItemRepository.findById(itemId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Bucket item not found"));
 
