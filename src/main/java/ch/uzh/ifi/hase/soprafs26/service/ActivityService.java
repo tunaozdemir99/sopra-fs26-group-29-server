@@ -118,6 +118,7 @@ public class ActivityService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a member of this trip");
         }
         validateActivityTimes(activityPostDTO.getDate(), activityPostDTO.getStartTime(), activityPostDTO.getEndTime());
+        validateActivityDateInRange(activityPostDTO.getDate(), trip);
 
         Activity activity = new Activity();
         activity.setDate(activityPostDTO.getDate());
@@ -133,9 +134,22 @@ public class ActivityService {
             activity.setName(bucketItem.getName());
             activity.setFromBucketItem(true);
             activity.setBucketItem(bucketItem);
-            activity.setLocationName(activityPostDTO.getLocationName() != null ? activityPostDTO.getLocationName() : bucketItem.getLocation());
-            activity.setLatitude(activityPostDTO.getLatitude() != null ? activityPostDTO.getLatitude() : bucketItem.getLatitude());
-            activity.setLongitude(activityPostDTO.getLongitude() != null ? activityPostDTO.getLongitude() : bucketItem.getLongitude());
+
+            boolean hasCustomName = activityPostDTO.getLocationName() != null && !activityPostDTO.getLocationName().isBlank();
+            boolean hasCoordinates = activityPostDTO.getLatitude() != null && activityPostDTO.getLongitude() != null;
+            if (hasCustomName != hasCoordinates) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Location name and coordinates must be provided together");
+            }
+            if (hasCustomName) {
+                activity.setLocationName(activityPostDTO.getLocationName());
+                activity.setLatitude(activityPostDTO.getLatitude());
+                activity.setLongitude(activityPostDTO.getLongitude());
+            } else {
+                activity.setLocationName(bucketItem.getLocation());
+                activity.setLatitude(bucketItem.getLatitude());
+                activity.setLongitude(bucketItem.getLongitude());
+            }
         } else {
             if (activityPostDTO.getName() == null || activityPostDTO.getName().isBlank()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "name is required when not scheduling from bucket");
@@ -173,12 +187,18 @@ public class ActivityService {
         }
 
         validateActivityTimes(activityPutDTO.getDate(), activityPutDTO.getStartTime(), activityPutDTO.getEndTime());
+        validateActivityDateInRange(activityPutDTO.getDate(), trip);
 
         if (activityPutDTO.getLatitude() == null || activityPutDTO.getLongitude() == null
                 || activityPutDTO.getLocationName() == null || activityPutDTO.getLocationName().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Location is required");
         }
 
+        if (activityPutDTO.getName() == null || activityPutDTO.getName().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Activity name is required");
+        }
+        
+        activity.setName(activityPutDTO.getName());
         activity.setDate(activityPutDTO.getDate());
         activity.setStartTime(activityPutDTO.getStartTime());
         activity.setEndTime(activityPutDTO.getEndTime());
@@ -204,6 +224,13 @@ public class ActivityService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Activity does not belong to this trip");
         }
         activityRepository.delete(activity);
+    }
+
+    private void validateActivityDateInRange(LocalDate date, Trip trip) {
+        if (date.isBefore(trip.getStartDate()) || date.isAfter(trip.getEndDate())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "Activity date must be within the trip's date range");
+        }
     }
 
     private void validateActivityTimes(LocalDate date, LocalTime startTime, LocalTime endTime) {

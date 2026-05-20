@@ -21,6 +21,7 @@ public class TripGetDTO {
     private LocalDateTime createdAt;
     private String inviteUrl;
     private String adminUsername;
+    private Long adminId;
 
     public Long getTripId() {
         return tripId;
@@ -84,5 +85,13 @@ public class TripGetDTO {
 
     public void setAdminUsername(String adminUsername) {
         this.adminUsername = adminUsername;
+    }
+
+    public Long getAdminId() {
+        return adminId;
+    }
+
+    public void setAdminId(Long adminId) {
+        this.adminId = adminId;
     }
 }

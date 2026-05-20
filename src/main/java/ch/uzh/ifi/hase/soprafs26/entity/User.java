@@ -37,6 +37,12 @@ public class User implements Serializable {
 
 	@Column(nullable = false)
 	private String password;
+
+	@Column(length = 500)
+	private String bio;
+
+	@Column(length = 2000000)
+	private String profilePicture;
 	
 
 	public Long getId() {
@@ -80,5 +86,20 @@ public class User implements Serializable {
 		this.password = password;
 	}
 
+	public String getBio() { 
+		return bio; 
+	}
+
+	public void setBio(String bio) { 
+		this.bio = bio; 
+	}
+
+	public String getProfilePicture() { 
+		return profilePicture; 
+	}
+
+	public void setProfilePicture(String profilePicture) { 
+		this.profilePicture = profilePicture; 
+	}
 	
 }

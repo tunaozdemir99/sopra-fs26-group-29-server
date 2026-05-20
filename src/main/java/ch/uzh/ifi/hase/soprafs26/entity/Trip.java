@@ -6,6 +6,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * ClassName: Trip
@@ -44,6 +46,9 @@ public class Trip implements Serializable {
     @Column(nullable = false, unique = true)
     private String inviteUrl;
 
+    @Column(nullable = false)
+    private boolean inviteActive = true;
+
     // the user who created (and currently admins) this trip
     @ManyToOne
     @JoinColumn(name = "admin_id", nullable = false)
@@ -56,6 +61,19 @@ public class Trip implements Serializable {
         inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     private Set<User> members = new HashSet<>();
+
+    // cascade entities
+    @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Pin> pins = new ArrayList<>();
+
+    @OneToMany(mappedBy = "activityTrip", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Activity> activities = new ArrayList<>();
+
+    @OneToMany(mappedBy = "bucketTrip", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<BucketItem> bucketItems = new ArrayList<>();
+
+    @OneToMany(mappedBy = "taskTrip", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Task> tasks = new ArrayList<>();
 
     // getters & setters
     public Long getTripId() {
@@ -112,6 +130,14 @@ public class Trip implements Serializable {
 
     public void setInviteUrl(String inviteUrl) {
         this.inviteUrl = inviteUrl;
+    }
+
+    public boolean isInviteActive() {
+        return inviteActive;
+    }
+
+    public void setInviteActive(boolean inviteActive) {
+        this.inviteActive = inviteActive;
     }
 
     public User getAdmin() {

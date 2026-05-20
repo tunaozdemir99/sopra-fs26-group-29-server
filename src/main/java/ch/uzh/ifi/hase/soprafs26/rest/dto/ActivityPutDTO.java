@@ -5,12 +5,21 @@ import java.time.LocalTime;
 
 public class ActivityPutDTO {
 
+    private String name;
     private LocalDate date;
     private LocalTime startTime;
     private LocalTime endTime;
     private String locationName;
     private Double latitude;
     private Double longitude;
+
+    public String getName() { 
+        return name; 
+    }
+
+    public void setName(String name) { 
+        this.name = name; 
+    }
 
     public LocalDate getDate() {
         return date;

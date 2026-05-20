@@ -2,6 +2,10 @@ package ch.uzh.ifi.hase.soprafs26.entity;
 
 import jakarta.persistence.*;
 import java.io.Serializable;
+import java.time.Instant;
+import org.hibernate.annotations.CreationTimestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -38,6 +42,10 @@ public class BucketItem implements Serializable {
     @Column
     private Double longitude;
 
+    @CreationTimestamp
+    @Column(updatable = false)
+    private Instant createdAt;
+
     // the user who created the item
     @ManyToOne
     @JoinColumn(name = "userId", nullable = false)
@@ -49,7 +57,11 @@ public class BucketItem implements Serializable {
     private Trip bucketTrip;
 
     @Column(nullable = false)
-    private int voteScore = 0;  
+    private int voteScore = 0;
+
+    // cascade delete
+    @OneToMany(mappedBy = "bucketItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Vote> votes = new ArrayList<>();
 
     // getters & setters
     public Long getBucketItemId() {
@@ -108,9 +120,27 @@ public class BucketItem implements Serializable {
         this.voteScore = voteScore;
     }
 
-    public Double getLatitude() { return latitude; }
-    public void setLatitude(Double latitude) { this.latitude = latitude; }
+    public Double getLatitude() { 
+        return latitude; 
+    }
 
-    public Double getLongitude() { return longitude; }
-    public void setLongitude(Double longitude) { this.longitude = longitude; }
+    public void setLatitude(Double latitude) { 
+        this.latitude = latitude; 
+    }
+
+    public Double getLongitude() { 
+        return longitude; 
+    }
+
+    public void setLongitude(Double longitude) { 
+        this.longitude = longitude; 
+    }
+
+    public Instant getCreatedAt() { 
+        return createdAt; 
+    }
+
+    public void setCreatedAt(Instant createdAt) { 
+        this.createdAt = createdAt; 
+    }
 }

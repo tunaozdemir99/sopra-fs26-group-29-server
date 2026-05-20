@@ -1,7 +1,10 @@
 package ch.uzh.ifi.hase.soprafs26.controller;
 
 import ch.uzh.ifi.hase.soprafs26.entity.Trip;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.JoinTripRequestDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.JoinTripResponseDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TripGetDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.TripPatchDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TripPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
@@ -59,6 +62,29 @@ public class TripController {
         return DTOMapper.INSTANCE.convertEntityToTripGetDTO(trip);
     }
 
+    @PatchMapping("/trips/{tripId}")
+    @ResponseStatus(HttpStatus.OK)
+    public TripGetDTO updateTrip(
+            @PathVariable Long tripId,
+            @RequestBody TripPatchDTO tripPatchDTO,
+            @RequestHeader("Authorization") String token) {
+
+        String rawToken = token.replace("Bearer ", "");
+        Trip updates = DTOMapper.INSTANCE.convertTripPatchDTOtoEntity(tripPatchDTO);
+        Trip updatedTrip = tripService.updateTrip(tripId, rawToken, updates);
+        return DTOMapper.INSTANCE.convertEntityToTripGetDTO(updatedTrip);
+    }
+
+    @DeleteMapping("/trips/{tripId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteTrip(
+            @PathVariable Long tripId,
+            @RequestHeader("Authorization") String token) {
+
+        String rawToken = token.replace("Bearer ", "");
+        tripService.deleteTrip(tripId, rawToken);
+    }
+
     @GetMapping("/users/{userId}/trips")
     @ResponseStatus(HttpStatus.OK)
     public List<TripGetDTO> getTripsForUser(
@@ -72,15 +98,75 @@ public class TripController {
                 .collect(Collectors.toList());
     }
 
-    @GetMapping("/trips/{tripId}/members")
+    @GetMapping("/trips/invite/{inviteCode}")
     @ResponseStatus(HttpStatus.OK)
-    public List<UserGetDTO> getTripMembers(
-            @PathVariable Long tripId,
+    public TripGetDTO getTripByInviteCode(
+            @PathVariable String inviteCode,
             @RequestHeader("Authorization") String token) {
         String rawToken = token.replace("Bearer ", "");
-        Trip trip = tripService.getTripById(tripId, rawToken);
-        return trip.getMembers().stream()
-                .map(DTOMapper.INSTANCE::convertEntityToUserGetDTO)
-                .collect(Collectors.toList());
+        Trip trip = tripService.getTripByInviteCode(inviteCode, rawToken);
+        return DTOMapper.INSTANCE.convertEntityToTripGetDTO(trip);
+    }
+
+    @PostMapping("/trips/join")
+    @ResponseStatus(HttpStatus.OK)
+    public JoinTripResponseDTO joinTrip(
+            @RequestBody JoinTripRequestDTO requestDTO,
+            @RequestHeader("Authorization") String token) {
+        String rawToken = token.replace("Bearer ", "");
+        TripService.JoinResult result = tripService.joinTripByInviteCode(requestDTO.getInviteCode(), rawToken);
+
+        Trip trip = result.trip;
+        JoinTripResponseDTO response = new JoinTripResponseDTO();
+        response.setTripId(trip.getTripId());
+        response.setTitle(trip.getTitle());
+        response.setLocation(trip.getLocation());
+        response.setStartDate(trip.getStartDate());
+        response.setEndDate(trip.getEndDate());
+        response.setAdminUsername(trip.getAdmin().getUsername());
+        response.setInviteUrl(trip.getInviteUrl());
+        response.setAlreadyMember(result.alreadyMember);
+        response.setMessage(result.alreadyMember
+                ? "You are already a member of this trip"
+                : "Successfully joined the trip");
+        return response;
+    }
+
+    @GetMapping("/trips/{tripId}/invite")
+    @ResponseStatus(HttpStatus.OK)
+    public java.util.Map<String, String> getInviteUrl(
+            @PathVariable Long tripId,
+            @RequestHeader("Authorization") String token) {
+
+        String rawToken = token.replace("Bearer ", "");
+        String inviteUrl = tripService.getInviteUrl(tripId, rawToken);
+
+        return java.util.Map.of("inviteUrl", inviteUrl);
+    }
+
+    @PutMapping("/trips/{tripId}/invite")
+    @ResponseStatus(HttpStatus.OK)
+    public java.util.Map<String, String> regenerateInviteUrl(
+            @PathVariable Long tripId,
+            @RequestHeader("Authorization") String token) {
+
+        String rawToken = token.replace("Bearer ", "");
+        String inviteUrl = tripService.regenerateInviteUrl(tripId, rawToken);
+
+        return java.util.Map.of("inviteUrl", inviteUrl);
+    }
+
+    @PatchMapping("/trips/{tripId}/invite")
+    @ResponseStatus(HttpStatus.OK)
+    public java.util.Map<String, Object> toggleInvite(
+            @PathVariable Long tripId,
+            @RequestBody java.util.Map<String, Boolean> body,
+            @RequestHeader("Authorization") String token) {
+
+        String rawToken = token.replace("Bearer ", "");
+        boolean active = body.getOrDefault("active", false);
+        tripService.setInviteActive(tripId, active, rawToken);
+
+        return java.util.Map.of("inviteActive", active);
     }
 }

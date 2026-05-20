@@ -31,10 +31,17 @@ public interface DTOMapper {
 	@Mapping(source = "password", target = "password")
 	User convertUserPostDTOtoEntity(UserPostDTO userPostDTO);
 
-	@Mapping(source = "id", target = "id")
-	@Mapping(source = "username", target = "username")
-	@Mapping(source = "status", target = "status")
-	UserGetDTO convertEntityToUserGetDTO(User user);
+    @Mapping(source = "id", target = "id")
+    @Mapping(source = "username", target = "username")
+    @Mapping(source = "status", target = "status")
+    @Mapping(source = "bio", target = "bio")
+    @Mapping(source = "profilePicture", target = "profilePicture")
+    UserGetDTO convertEntityToUserGetDTO(User user);
+
+    @Mapping(source = "bio", target = "bio")
+    @Mapping(source = "profilePicture", target = "profilePicture")
+    @Mapping(source = "password", target = "password")
+    User convertUserPatchDTOtoEntity(UserPatchDTO userPatchDTO);
 
 	@Mapping(source = "id", target = "id")
 	@Mapping(source = "username", target = "username")
@@ -49,6 +56,12 @@ public interface DTOMapper {
     @Mapping(source = "endDate", target = "endDate")
     Trip convertTripPostDTOtoEntity(TripPostDTO tripPostDTO);
 
+    @Mapping(source = "title", target = "title")
+    @Mapping(source = "location", target = "location")
+    @Mapping(source = "startDate", target = "startDate")
+    @Mapping(source = "endDate", target = "endDate")
+    Trip convertTripPatchDTOtoEntity(TripPatchDTO tripPatchDTO);
+
     @Mapping(source = "tripId", target = "tripId")
     @Mapping(source = "title", target = "title")
     @Mapping(source = "location", target = "location")
@@ -57,6 +70,7 @@ public interface DTOMapper {
     @Mapping(source = "createdAt", target = "createdAt")
     @Mapping(source = "inviteUrl", target = "inviteUrl")
     @Mapping(source = "admin.username", target = "adminUsername")
+    @Mapping(source = "admin.id", target = "adminId")
     TripGetDTO convertEntityToTripGetDTO(Trip trip);
 
     // Pin mappings
@@ -87,6 +101,7 @@ public interface DTOMapper {
     @Mapping(source = "voteScore", target = "voteScore")
     @Mapping(source = "latitude", target = "latitude")
     @Mapping(source = "longitude", target = "longitude")
+    @Mapping(source = "createdAt", target = "createdAt")
     BucketItemGetDTO convertEntityToBucketItemGetDTO(BucketItem bucketItem);
 
     @Mapping(source = "taskId", target = "taskId")
