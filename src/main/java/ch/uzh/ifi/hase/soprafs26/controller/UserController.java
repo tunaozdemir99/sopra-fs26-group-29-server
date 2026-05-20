@@ -10,6 +10,7 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.UserLoginDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPatchDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,6 +68,17 @@ public class UserController {
 		return DTOMapper.INSTANCE.convertEntityToUserLoginDTO(loggedInUser);
 	}
 
+    @PostMapping("/users/logout")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void logoutUser(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.replace("Bearer ", "");
+        User user = userService.findByToken(token);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or missing token");
+        }
+        userService.logoutUser(user.getId(), token);
+    }
+
 	@GetMapping("/users/{id}")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
@@ -80,16 +92,16 @@ public class UserController {
 		return DTOMapper.INSTANCE.convertEntityToUserGetDTO(user);
 	}
 
-	@PatchMapping("/users/{id}")
-	@ResponseStatus(HttpStatus.NO_CONTENT)
-	public void updateUser(
-		@PathVariable Long id,
-		@RequestHeader("Authorization") String authHeader,
-		@RequestBody UserPatchDTO userPatchDTO
-	) {
-		String token = authHeader.replace("Bearer ", "");
-		User updates = DTOMapper.INSTANCE.convertUserPatchDTOtoEntity(userPatchDTO);
-		userService.updateUser(id, token, updates);
-	}
-
+    @PatchMapping("/users/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public UserGetDTO updateUser(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody UserPatchDTO userPatchDTO
+    ) {
+        String token = authHeader.replace("Bearer ", "");
+        User updates = DTOMapper.INSTANCE.convertUserPatchDTOtoEntity(userPatchDTO);
+        User updated = userService.updateUser(id, token, updates);
+        return DTOMapper.INSTANCE.convertEntityToUserGetDTO(updated);
+    }
 }

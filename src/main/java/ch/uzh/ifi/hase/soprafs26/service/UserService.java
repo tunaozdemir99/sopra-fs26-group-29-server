@@ -76,7 +76,7 @@ public class UserService {
 		User userByUsername = userRepository.findByUsername(loginUser.getUsername());
 
 		if (userByUsername == null || !userByUsername.getPassword().equals(loginUser.getPassword())) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid username or password");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
 		}
 
 		userByUsername.setToken(UUID.randomUUID().toString()); // token gets updated on each login
@@ -122,6 +122,10 @@ public class UserService {
 		return userRepository.findById(userId).orElseThrow(() ->
 			new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 	}
+
+    public User findByToken(String token) {
+        return userRepository.findByToken(token);
+    }
 
 	public void validateToken(String token) {
 		if (token == null || userRepository.findByToken(token) == null) {
