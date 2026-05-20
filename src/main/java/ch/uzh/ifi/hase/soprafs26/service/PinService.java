@@ -31,58 +31,58 @@ public class PinService {
 
     private final PinRepository pinRepository;
     private final TripRepository tripRepository;
+    private final UserRepository userRepository;
 
     @Autowired
-    public PinService(PinRepository pinRepository, TripRepository tripRepository) {
+    public PinService(PinRepository pinRepository, TripRepository tripRepository, UserRepository userRepository) {
         this.pinRepository = pinRepository;
         this.tripRepository = tripRepository;
+        this.userRepository = userRepository;
     }
 
-    public List<Pin> getPinsByTripId(Long tripId) {
-        // verify trip exists
-        tripRepository.findById(tripId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Trip not found"));
-
+    public List<Pin> getPinsByTripId(Long tripId, String token) {
+        validateTokenAndMembership(tripId, token);
         return pinRepository.findByTrip_TripId(tripId);
     }
 
-    public Pin createPin(Long tripId, Pin newPin) {
+    public Pin createPin(Long tripId, Pin newPin, String token) {
+        validateTokenAndMembership(tripId, token);
         var trip = tripRepository.findById(tripId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Trip not found"));
-
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trip not found"));
         if (newPin.getName() == null || newPin.getName().isBlank()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Pin name is required");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Pin name is required");
         }
         if (newPin.getLatitude() == null || newPin.getLongitude() == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Latitude and longitude are required");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Latitude and longitude are required");
         }
-
         newPin.setTrip(trip);
         newPin = pinRepository.save(newPin);
         pinRepository.flush();
-
         return newPin;
     }
 
-    public void deletePin(Long tripId, Long pinId) {
-        tripRepository.findById(tripId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Trip not found"));
-
+    public void deletePin(Long tripId, Long pinId, String token) {
+        validateTokenAndMembership(tripId, token);
         Pin pin = pinRepository.findById(pinId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Pin not found"));
-
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pin not found"));
         if (!pin.getTrip().getTripId().equals(tripId)) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Pin does not belong to this trip");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Pin does not belong to this trip");
         }
-
         pinRepository.delete(pin);
         pinRepository.flush();
+    }
+
+    // helper function
+    private User validateTokenAndMembership(Long tripId, String token) {
+        User user = userRepository.findByToken(token);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or missing token");
+        }
+        Trip trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trip not found"));
+        if (!trip.getMembers().contains(user)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a member of this trip");
+        }
+        return user;
     }
 }

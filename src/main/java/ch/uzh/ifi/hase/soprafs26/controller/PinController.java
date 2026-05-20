@@ -30,8 +30,11 @@ public class PinController {
 
     @GetMapping("/trips/{tripId}/pins")
     @ResponseStatus(HttpStatus.OK)
-    public List<PinGetDTO> getPins(@PathVariable Long tripId) {
-        List<Pin> pins = pinService.getPinsByTripId(tripId);
+    public List<PinGetDTO> getPins(
+            @PathVariable Long tripId,
+            @RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.replace("Bearer ", "");
+        List<Pin> pins = pinService.getPinsByTripId(tripId, token);
         return pins.stream()
                 .map(DTOMapper.INSTANCE::convertEntityToPinGetDTO)
                 .toList();
@@ -41,11 +44,11 @@ public class PinController {
     @ResponseStatus(HttpStatus.CREATED)
     public PinGetDTO createPin(
             @PathVariable Long tripId,
-            @RequestBody PinPostDTO pinPostDTO) {
-
+            @RequestBody PinPostDTO pinPostDTO,
+            @RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.replace("Bearer ", "");
         Pin pinInput = DTOMapper.INSTANCE.convertPinPostDTOtoEntity(pinPostDTO);
-        Pin createdPin = pinService.createPin(tripId, pinInput);
-
+        Pin createdPin = pinService.createPin(tripId, pinInput, token);
         return DTOMapper.INSTANCE.convertEntityToPinGetDTO(createdPin);
     }
 
@@ -53,8 +56,9 @@ public class PinController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePin(
             @PathVariable Long tripId,
-            @PathVariable Long pinId) {
-
-        pinService.deletePin(tripId, pinId);
+            @PathVariable Long pinId,
+            @RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.replace("Bearer ", "");
+        pinService.deletePin(tripId, pinId, token);
     }
 }
