@@ -1,6 +1,8 @@
 package ch.uzh.ifi.hase.soprafs26.controller;
 
+import ch.uzh.ifi.hase.soprafs26.entity.Trip;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.MemberGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs26.service.MemberService;
@@ -31,11 +33,18 @@ public class MemberController {
 
     @GetMapping("/trips/{tripId}/members")
     @ResponseStatus(HttpStatus.OK)
-    public List<UserGetDTO> getMembers(@PathVariable Long tripId) {
-        Set<User> members = memberService.getMembers(tripId);
-        return members.stream()
-                .map(DTOMapper.INSTANCE::convertEntityToUserGetDTO)
-                .toList();
+    public List<MemberGetDTO> getMembers(
+            @PathVariable Long tripId,
+            @RequestHeader("Authorization") String authHeader) {
+        String rawToken = authHeader.replace("Bearer ", "");
+        Trip trip = memberService.getTripWithAuthCheck(tripId, rawToken);
+        return trip.getMembers().stream().map(user -> {
+            MemberGetDTO dto = new MemberGetDTO();
+            dto.setId(user.getId());
+            dto.setUsername(user.getUsername());
+            dto.setIsAdmin(trip.getAdmin().getId().equals(user.getId()));
+            return dto;
+        }).toList();
     }
 
     @PostMapping("/trips/{tripId}/members")

@@ -75,6 +75,10 @@ public class TaskService {
 
     // PATCH /trips/{tripId}/tasks/{taskId}
     public Task updateTaskStatus(Long tripId, Long taskId, TaskStatus newStatus, String token) {
+        if (newStatus == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status is required");
+        }
+
         User user = userRepository.findByToken(token);
         if (user == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or missing token");
